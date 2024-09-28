@@ -22,22 +22,18 @@ const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
 };
 
 std::vector<std::pair<std::string, RE::TESFaction *>> GetRelevantFactions() {
-    // Hier fügen wir die relevanten Fraktionen hinzu
     std::vector<std::pair<std::string, RE::TESFaction *>> factions;
 
-    // BanditFaction
     RE::TESFaction *banditFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x0001BCC0);
     if (banditFaction) {
         factions.push_back({"BanditFaction", banditFaction});
     }
 
-    // Imperial Legion
     RE::TESFaction *imperialFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x0002BF9A);
     if (imperialFaction) {
         factions.push_back({"ImperialFaction", imperialFaction});
     }
 
-    // Stormcloaks
     RE::TESFaction *stormcloakFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x00028849);
     if (stormcloakFaction) {
         factions.push_back({"StormcloakFaction", stormcloakFaction});
