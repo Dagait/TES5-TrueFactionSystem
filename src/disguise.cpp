@@ -2,13 +2,13 @@
 
 #include "faction.h"
 
-constexpr RE::ActorValue kDisguiseValue = static_cast<RE::ActorValue>(0);  // Custom value for disguise
+constexpr RE::ActorValue kDisguiseValue = static_cast<RE::ActorValue>(0);
 
 
 float CalculateDisguiseValue(Actor *actor) {
     float disguiseValue = 0.0f;
 
-    // List of armor weights
+    // List of armor weights (Need to be adjusted)
     constexpr float chestWeight = 70.0f;
     constexpr float helmetWeight = 15.0f;
     constexpr float glovesWeight = 4.0f;
@@ -38,47 +38,56 @@ float CalculateDisguiseValue(Actor *actor) {
     return disguiseValue;
 }
 
-bool CheckNPCDetection(Actor *actor, float disguiseValue) {
-    // Set the detection probability based on the player's disguise value
-    float detectionProbability = 100.0f - disguiseValue;  // Inverse of disguise value
-    float detectionRadius = 2000.0f;                      // Maximum detection radius around the player
+float GetDetectionProbability(float disguiseValue) {
+    return 100.0f - disguiseValue;
+}
 
-    // Get the player's current cell
-    RE::TESObjectCELL *playerCell = actor->GetParentCell();
-    if (!playerCell) return false;
+bool IsPlayerDetected(float disguiseValue) {
+    float detectionProbability = GetDetectionProbability(disguiseValue);
 
-    // Iterate through all references in the player's current cell
-    auto &references = playerCell->GetRuntimeData().references;
-    for (auto &refHandle : references) {
-        RE::TESObjectREFR *reference = refHandle.get();
-        if (!reference) continue;
+    // Generate a random value between 0 and 100
+    float randomValue = static_cast<float>(rand() % 101);
+    return randomValue <= detectionProbability;
+}
 
-        // Check if the reference is an Actor
-        RE::Actor *npc = reference->As<RE::Actor>();
-        if (!npc || npc == actor) continue;  // Skip if it's the player or not an NPC
+float AdjustProbabilityByDistance(float detectionProbability, float distance, float maxDistance) {
+    float distanceFactor = 1.0f - (distance / maxDistance);  // Scaled by 1 (near) to 0 (far)
+    return detectionProbability * distanceFactor;
+}
 
-        // Get the distance between the player and the NPC
-        float distance = npc->GetPosition().GetDistance(actor->GetPosition());
-
-        // Only check NPCs within the detection radius
-        if (distance < detectionRadius) {
-            // Higher proximity increases detection probability
-            float proximityFactor = (detectionRadius - distance) / detectionRadius;
-            float finalProbability = detectionProbability * proximityFactor;
-
-            // Simulate detection based on probability
-            float randomChance = static_cast<float>(rand() % 100);
-            if (randomChance < finalProbability) {
-                RE::ConsoleLog::GetSingleton()->Print(
-                    ("Player detected by NPC at distance: " + std::to_string(distance)).c_str());
-                return true;  // Player is detected by an NPC
-            }
-        }
+bool CheckNPCDetection(RE::Actor* player, float disguiseValue) {
+    RE::TESObjectCELL* currentCell = player->GetParentCell();
+    if (!currentCell) {
+        return false;
     }
 
-    // Player is not detected by any NPCs within the radius
-    return false;
+    float detectionRadius = 500.0f;
+
+    bool playerDetected = false;
+
+    currentCell->ForEachReferenceInRange(player->GetPosition(), detectionRadius, [&](RE::TESObjectREFR& ref) {
+        RE::Actor* npc = skyrim_cast<RE::Actor*>(&ref);
+        if (npc && npc != player) {
+            float distance = player->GetPosition().GetDistance(npc->GetPosition());
+
+            // Calculate the detection probability based on the player's disguise value
+            float detectionProbability = GetDetectionProbability(disguiseValue);
+            detectionProbability = AdjustProbabilityByDistance(detectionProbability, distance, detectionRadius);
+
+            if (IsPlayerDetected(detectionProbability)) {
+                RE::ConsoleLog::GetSingleton()->Print(
+                    ("NPC " + std::to_string(npc->GetFormID()) + " detected the player!").c_str());
+                playerDetected = true;
+                return BSContainer::ForEachResult::kStop;
+            }
+        }
+
+        return BSContainer::ForEachResult::kContinue;
+    });
+
+    return playerDetected;
 }
+
 
 void UpdateDisguiseValue(Actor *actor) {
     // Calculate the disguise value based on equipped armor
@@ -91,7 +100,6 @@ void UpdateDisguiseValue(Actor *actor) {
 
     // Get the faction corresponding to the armor worn by the player
     RE::TESFaction *faction = GetFactionByArmorTag(actor);
-
     if (faction) {
         // Modify the faction detection based on the disguise value
         ModifyFactionDetection(actor, disguiseValue, faction);
@@ -99,7 +107,6 @@ void UpdateDisguiseValue(Actor *actor) {
         RE::ConsoleLog::GetSingleton()->Print("No faction found!");
     }
 
-    // **New part: Check for NPC detection in the player's vicinity**
     bool playerDetected = CheckNPCDetection(actor, disguiseValue);
     if (playerDetected) {
         // Player is detected by NPCs, modify behavior or remove from faction if necessary

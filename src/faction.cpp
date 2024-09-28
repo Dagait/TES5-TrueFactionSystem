@@ -1,9 +1,9 @@
 #include "faction.h"
 
 const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
-    {"npeBanditArmor", 0x0001BCC0},      // Bandit faction
-    {"npeImperialArmor", 0x0001C21C},    // Imperial faction
-    {"npeStormcloakArmor", 0x0001C21E},  // Stormcloak faction
+    {"npeBanditFaction", 0x0001BCC0},      // Bandit faction
+    {"npeImperialFaction", 0x0002BF9A},    // Imperial faction
+    {"npeStormcloakFaction", 0x00028849},  // Stormcloak faction
 };
 
 RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
