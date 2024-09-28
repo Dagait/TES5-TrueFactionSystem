@@ -1,6 +1,6 @@
-# True Faction Manager (TFM)
+# True Faction System (TFS)
 
-The **True Faction Manager** is an SKSE plugin for Skyrim Special Edition that allows the player to act as a member of various factions depending on the armor worn. The plugin uses dynamic faction recognition based on faction armors and adjusts NPC behavior accordingly.
+The **True Faction System** is an SKSE plugin for Skyrim Special Edition that allows the player to act as a member of various factions depending on the armor worn. The plugin uses dynamic faction recognition based on faction armors and adjusts NPC behavior accordingly.
 
 ## Features
 
@@ -42,7 +42,7 @@ The **True Faction Manager** is an SKSE plugin for Skyrim Special Edition that a
 ### Planned Features:
 
 - Improved detection logic: Considering NPC level, line of sight, environment, and other factors in faction detection.
-- Quest integration: Possible integration into existing quests to adjust NPC behavior based on the player’s disguise.
+- Quest integration: Possible integration into existing quests to adjust NPC behavior based on the playerâ€™s disguise.
 - Mod support: Support for custom faction armors and factions from mods.
 - Configurable settings: Allow players to customize settings such as check intervals, stealth thresholds, and more.
 
