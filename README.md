@@ -31,11 +31,11 @@ True Faction Manager is an SKSE plugin for Skyrim Special Edition that allows th
 
 ### Planned features:
 
--[ ] **Background detection system**: Implementation of a background process that automatically checks faction affiliation and detection probability every few seconds without the player having to change their armor.
--[ ] **Advanced faction integration**: Support for more factions such as the Thalmor, Thieves Guild and others.
--[ ] **Improved detection logic**: Consideration of NPC level, line of sight, environment and other factors in faction detection.
--[ ] **Quest integration**: Possible integration into existing quests to adjust NPC behavior depending on player stealth.
--[ ] **Mod support**: Support for custom faction armor and factions from mods.
+- [ ] **Background detection system**: Implementation of a background process that automatically checks faction affiliation and detection probability every few seconds without the player having to change their armor.
+- [ ] **Advanced faction integration**: Support for more factions such as the Thalmor, Thieves Guild and others.
+- [ ] **Improved detection logic**: Consideration of NPC level, line of sight, environment and other factors in faction detection.
+- [ ] **Quest integration**: Possible integration into existing quests to adjust NPC behavior depending on player stealth.
+- [ ] **Mod support**: Support for custom faction armor and factions from mods.
 
 ## Known issues
 
