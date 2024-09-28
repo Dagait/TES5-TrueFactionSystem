@@ -21,6 +21,21 @@ const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
     {"npeWinterholdFaction", 0x00014217}
 };
 
+static std::unordered_map<RE::FormID, std::string> factionFormIDToTagMap = {
+    {0x0001BCC0, "npeBanditFaction"},
+    {0x0002BF9A, "npeImperialFaction"},    {0x00072834, "npeBladesFaction"},
+    {0x00048362, "npeCompanionsFaction"}, {0x00014217, "npeDawnguardFaction"},   {0x0002816E, "npeDawnstarFaction"},
+    {0x00028170, "npeFalkreathFaction"},  {0x00043599, "npeForswornFaction"},    {0x0002816C, "npeMarkarthFaction"},
+    {0x0002816D, "npeMorthalFaction"},    {0x000DEED6, "npeNightingaleFaction"}, {0x0002816B, "npeRiftenFaction"},
+    {0x00029DB0, "npeSolitudeFaction"},   {0x00018279, "npeSolstheimFaction"},   {0x00028849, "npeStormcloaksFaction"},
+    {0x000267EA, "npeWhiterunFaction"},   {0x000267E3, "npeWindhelmFaction"},    {0x00014217, "npeWinterholdFaction"}};
+
+const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots = {
+    RE::BGSBipedObjectForm::BipedObjectSlot::kHead,     RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
+    RE::BGSBipedObjectForm::BipedObjectSlot::kHands,    RE::BGSBipedObjectForm::BipedObjectSlot::kFeet,
+    RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet,
+    RE::BGSBipedObjectForm::BipedObjectSlot::kHair};
+
 std::vector<std::pair<std::string, RE::TESFaction *>> GetRelevantFactions() {
     std::vector<std::pair<std::string, RE::TESFaction *>> factions;
 
@@ -117,6 +132,40 @@ std::vector<std::pair<std::string, RE::TESFaction *>> GetRelevantFactions() {
     return factions;
 }
 
+std::string GetTagForFaction(RE::TESFaction *faction) {
+    if (faction) {
+        auto it = factionFormIDToTagMap.find(faction->GetFormID());
+        if (it != factionFormIDToTagMap.end()) {
+            return it->second;
+        }
+    }
+    return "";
+}
+
+std::vector<RE::TESFaction *> GetFactionsByArmorTags(RE::Actor *actor) {
+    if (!actor) {
+        return {};
+    }
+
+    std::set<RE::TESFaction *> factionsSet;  // Verwende ein Set, um Duplikate zu vermeiden
+
+    for (auto slot : allArmorSlots) {
+        RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot);
+        if (wornArmor) {
+            for (const auto &[tag, factionID] : factionArmorTags) {
+                if (wornArmor->HasKeywordString(tag)) {
+                    RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
+                    if (faction) {
+                        factionsSet.insert(faction);
+                    }
+                }
+            }
+        }
+    }
+
+    return std::vector<RE::TESFaction *>(factionsSet.begin(), factionsSet.end());
+}
+
 RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
     if (!actor) {
         return nullptr;
@@ -124,7 +173,10 @@ RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
 
     std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> armorSlots = {
         RE::BGSBipedObjectForm::BipedObjectSlot::kHead, RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
-        RE::BGSBipedObjectForm::BipedObjectSlot::kHands, RE::BGSBipedObjectForm::BipedObjectSlot::kFeet};
+        RE::BGSBipedObjectForm::BipedObjectSlot::kHands, RE::BGSBipedObjectForm::BipedObjectSlot::kFeet,
+        RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet,
+        RE::BGSBipedObjectForm::BipedObjectSlot::kHair
+    };
 
     for (auto &slot : armorSlots) {
         RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot);

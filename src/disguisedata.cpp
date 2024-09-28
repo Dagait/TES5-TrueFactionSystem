@@ -13,10 +13,12 @@ float PlayerDisguiseStatus::GetDisguiseValue(RE::TESFaction* faction) const {
     if (it != factionDisguiseMap.end()) {
         return it->second.disguiseValue;
     }
-    return 0.0f;  // Standardwert, wenn keine Rüstung für die Fraktion getragen wird
+    return 0.0f;
 }
 
 void PlayerDisguiseStatus::RemoveDisguiseValue(RE::TESFaction* faction) { factionDisguiseMap.erase(faction); }
+
+void PlayerDisguiseStatus::Clear() { factionDisguiseMap.clear(); }
 
 void PlayerDisguiseStatus::Save(SKSE::SerializationInterface* a_intfc) {
     // Speichere die Anzahl der Einträge in factionDisguiseMap

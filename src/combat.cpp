@@ -8,7 +8,7 @@
 
 
 extern PlayerDisguiseStatus playerDisguiseStatus;
-constexpr std::chrono::minutes REJOIN_COOLDOWN(1);
+constexpr std::chrono::minutes REJOIN_COOLDOWN(120);
 
 std::unordered_map<RE::TESFaction*, std::chrono::steady_clock::time_point> factionCooldowns;
 

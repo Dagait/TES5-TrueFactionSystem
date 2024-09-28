@@ -17,7 +17,25 @@ constexpr float FOREARMS_WEIGHT = 8.0f;
 constexpr float SHOES_WEIGHT = 5.0f;
 constexpr float CIRCLET_WEIGHT = 1.0f;
 
-constexpr const char* COVERED_FACE_TAG = "npeCoveredFace";
+struct ArmorSlot {
+    RE::BGSBipedObjectForm::BipedObjectSlot slot;
+    float weight;
+};
+
+const std::vector<ArmorSlot> armorSlots = {{RE::BGSBipedObjectForm::BipedObjectSlot::kBody, CHEST_WEIGHT},
+                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kHands, GLOVES_WEIGHT},
+                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, FOREARMS_WEIGHT},
+                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet, CIRCLET_WEIGHT},
+                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kFeet, SHOES_WEIGHT},
+                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kHead, HELMET_WEIGHT}};
+
+const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots = {
+    RE::BGSBipedObjectForm::BipedObjectSlot::kHead,     RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
+    RE::BGSBipedObjectForm::BipedObjectSlot::kHands,    RE::BGSBipedObjectForm::BipedObjectSlot::kFeet,
+    RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet,
+    RE::BGSBipedObjectForm::BipedObjectSlot::kHair};
+
+
 
 // Global map to store NPCs, which have recognized the player (Disguised Value the player)
 std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
@@ -26,13 +44,9 @@ constexpr std::chrono::minutes TIME_TO_LOSE_DETECTION(120);  // 2 hours
 PlayerDisguiseStatus playerDisguiseStatus;
 
 bool IsFaceCovered(Actor *actor) {
-    const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> helmetSlots = {
-        RE::BGSBipedObjectForm::BipedObjectSlot::kHead, RE::BGSBipedObjectForm::BipedObjectSlot::kHair,
-        RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet};
-
     constexpr const char *COVERED_FACE_TAG = "npeCoveredFace";
 
-    for (auto slot : helmetSlots) {
+    for (auto slot : allArmorSlots) {
         RE::TESObjectARMO *armor = actor->GetWornArmor(slot);
         if (armor && armor->HasKeywordString(COVERED_FACE_TAG)) {
             return true;
@@ -43,44 +57,28 @@ bool IsFaceCovered(Actor *actor) {
 }
 
 
-void CalculateDisguiseValue(Actor *actor, bool isEquipped) {
-    RE::TESFaction *faction = GetFactionByArmorTag(actor);
-    float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
-    bool isFaceCovered = IsFaceCovered(actor) && faction;
+void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
+    float disguiseValue = 0.0f;
 
-    if (isEquipped && isFaceCovered) {
-        // If equipped and face is covered, disguise is 100%
-        disguiseValue = 100.0f;
-    } else {
-        // Define armor slots and their corresponding weights
-        struct ArmorSlot {
-            RE::BGSBipedObjectForm::BipedObjectSlot slot;
-            float weight;
-        };
-        const std::vector<ArmorSlot> armorSlots = {
-            {RE::BGSBipedObjectForm::BipedObjectSlot::kBody, CHEST_WEIGHT},
-            {RE::BGSBipedObjectForm::BipedObjectSlot::kHands, GLOVES_WEIGHT},
-            {RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, FOREARMS_WEIGHT},
-            {RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet, CIRCLET_WEIGHT},
-            {RE::BGSBipedObjectForm::BipedObjectSlot::kFeet, SHOES_WEIGHT},
-            {RE::BGSBipedObjectForm::BipedObjectSlot::kHead, HELMET_WEIGHT}};
+    std::string factionTag = GetTagForFaction(faction);
+    if (factionTag.empty()) {
+        return;
+    }
 
-        for (const auto &slot : armorSlots) {
-            RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
-            if (armor && faction) {
-                // Add or subtract the armor's weight based on whether it's equipped or unequipped
-                disguiseValue += isEquipped ? slot.weight : -slot.weight;
+    for (const auto &slot : armorSlots) {
+        RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
+        if (armor) {
+            if (armor->HasKeywordString(factionTag)) {
+                disguiseValue += slot.weight;
             }
         }
     }
 
-    // Clamp the disguise value between 0 and 100
     disguiseValue = std::clamp(disguiseValue, 0.0f, 100.0f);
-    playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
 
-    RE::ConsoleLog::GetSingleton()->Print(
-        ("Updated Disguise Value for faction: " + std::to_string(disguiseValue)).c_str());
+    playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
 }
+
 
 
 float GetDetectionProbability(float disguiseValue) {
@@ -116,7 +114,6 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
         }
     }
 
-    // Zufälliger Wert für die Erkennung
     float randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     return randomValue < recognitionProbability;
 }
@@ -142,8 +139,6 @@ void CheckNPCDetection(RE::Actor* player) {
         currentCell->ForEachReferenceInRange(player->GetPosition(), DETECTION_RADIUS, [&](RE::TESObjectREFR &ref) {
             RE::Actor *npc = skyrim_cast<RE::Actor *>(&ref);
             if (npc && npc != player && npc->IsInFaction(faction)) {  // Check if NPC is in the relevant faction
-                RE::ConsoleLog::GetSingleton()
-                    ->Print(("NPC " + std::to_string(npc->GetFormID()) + " from " + factionName + " is near!").c_str());
                 float distance = abs(player->GetPosition().GetDistance(npc->GetPosition()));
 
                 // Calculate the detection probability based on the player's disguise value
@@ -169,33 +164,56 @@ void CheckNPCDetection(RE::Actor* player) {
     }
 }
 
+void RemovePlayerFromAllFactions(Actor *player) {
+    auto factions = GetRelevantFactions();
+    for (auto &[factionName, faction] : factions) {
+        if (player->IsInFaction(faction)) {
+            player->AddToFaction(faction, -1);
+        }
+    }
+}
 
-void UpdateDisguiseValue(Actor *actor, bool isEquipped) {
-    // Calculate the disguise value based on equipped armor
-    RE::TESFaction *faction = GetFactionByArmorTag(actor);
-    CalculateDisguiseValue(actor, isEquipped);
+void UpdateDisguiseValue(Actor *actor) {
+    std::vector<RE::TESFaction *> factions = GetFactionsByArmorTags(actor);
+    if (factions.empty()) {
+        playerDisguiseStatus.Clear();
+        RemovePlayerFromAllFactions(actor);
+        return;
+    }
 
-    // Set the actor's custom disguise value
-    float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
-    playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
+    for (RE::TESFaction *faction : factions) {
+        if (!faction) {
+            continue;
+        }
 
-    RE::ConsoleLog::GetSingleton()->Print(("Current Disguise Value: " + std::to_string(disguiseValue)).c_str());
+        CalculateDisguiseValue(actor, faction);
 
-    if (faction && !actor->IsInFaction(faction)) {
-        // Add the player to the faction if they are wearing faction armor
-        actor->AddToFaction(faction, 1);
-        RE::ConsoleLog::GetSingleton()->Print("Player added to faction!");
-    } else if (faction && actor->IsInFaction(faction)) {
-        // Entferne den Spieler aus der Fraktion, wenn der Disguise-Wert nicht mehr ausreicht
-        if (disguiseValue <= 0) {
-            actor->AddToFaction(faction, -1);
-            playerDisguiseStatus.RemoveDisguiseValue(faction);
-            RE::ConsoleLog::GetSingleton()->Print("Player removed from faction due to low disguise value.");
+        float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
+
+        RE::ConsoleLog::GetSingleton()->Print(("Current Disguise Value for faction " +
+                                               std::to_string(faction->GetFormID()) + ": " +
+                                               std::to_string(disguiseValue))
+                                                  .c_str());
+
+        if (!actor->IsInFaction(faction)) {
+            actor->AddToFaction(faction, 1);
+            RE::ConsoleLog::GetSingleton()->Print(
+                ("Player added to faction " + std::to_string(faction->GetFormID())).c_str());
+        } else {
+            if (disguiseValue <= 5.0f) {
+                actor->AddToFaction(faction, -1);
+                playerDisguiseStatus.RemoveDisguiseValue(faction);
+                RE::ConsoleLog::GetSingleton()->Print(("Player removed from faction " +
+                                                       std::to_string(faction->GetFormID()) +
+                                                       " due to low disguise value.")
+                                                          .c_str());
+            }
         }
     }
 
     CheckNPCDetection(actor);
 }
+
 
 void SaveDetectionData(SKSE::SerializationInterface *a_intfc) {
     for (auto &[npcID, detectionData] : recognizedNPCs) {

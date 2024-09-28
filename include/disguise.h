@@ -4,8 +4,8 @@
 
 using namespace RE;
 
-void CalculateDisguiseValue(Actor *actor, bool isEquipped);
-void UpdateDisguiseValue(Actor *actor, bool isEquipped);
+void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction);
+void UpdateDisguiseValue(Actor *actor);
 void CheckNPCDetection(Actor *actor);
 float GetDetectionProbability(float disguiseValue);
 float AdjustProbabilityByDistance(float detectionProbability, float distance, float maxDistance);

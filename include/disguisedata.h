@@ -17,4 +17,5 @@ struct PlayerDisguiseStatus {
 
     void Save(SKSE::SerializationInterface* a_intfc);
     void Load(SKSE::SerializationInterface* a_intfc);
+    void Clear();
 };

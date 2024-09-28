@@ -23,14 +23,10 @@ RE::BSEventNotifyControl EquipEventHandler::ProcessEvent(const RE::TESEquipEvent
         return RE::BSEventNotifyControl::kContinue;
     }
 
-    RE::ConsoleLog::GetSingleton()->Print("Equipment change detected!");
-
-    Actor *actor = skyrim_cast<Actor *>(evn->actor.get());
-    bool isEquipped = evn->equipped;
+    Actor *actor = skyrim_cast<Actor*>(evn->actor.get());
 
     if (actor && actor->IsPlayerRef()) {
-        RE::ConsoleLog::GetSingleton()->Print("Equipment change detected!");
-        UpdateDisguiseValue(actor, isEquipped);  // Update disguise value for player
+        UpdateDisguiseValue(actor);  // Update disguise value for player
     }
 
     return RE::BSEventNotifyControl::kContinue;
@@ -44,8 +40,8 @@ void StartBackgroundTask(Actor *player) {
                 auto elapsed = now - lastCheckTime;
 
                 if (elapsed >= CHECK_INTERVAL_SECONDS) {
-                    RE::ConsoleLog::GetSingleton()->Print("Checking NPC detection...");
                     CheckNPCDetection(player);
+                    UpdateDisguiseValue(player);
                     CheckAndReAddPlayerToFaction(player);
                     lastCheckTime = now;
                 }
