@@ -10,3 +10,4 @@ public:
                                                   RE::BSTEventSource<RE::TESHitEvent>* dispatcher) override;
 };
 RE::TESFaction* GetFactionByActor(RE::Actor* actor);
+void CheckAndReAddPlayerToFaction(RE::Actor* player);

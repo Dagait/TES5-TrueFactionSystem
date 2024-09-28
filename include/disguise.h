@@ -13,3 +13,4 @@ float GetDetectionProbability(float disguiseValue);
 bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction);
 void LoadDetectionData(SKSE::SerializationInterface *a_intfc);
 void SaveDetectionData(SKSE::SerializationInterface *a_intfc);
+bool IsFaceCovered(Actor *actor);

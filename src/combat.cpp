@@ -1,5 +1,16 @@
 #include "combat.h"
 #include "faction.h"
+#include "disguisedata.h"
+
+#include <chrono>
+#include <unordered_map>
+#include <thread>
+
+
+extern PlayerDisguiseStatus playerDisguiseStatus;
+constexpr std::chrono::minutes REJOIN_COOLDOWN(1);
+
+std::unordered_map<RE::TESFaction*, std::chrono::steady_clock::time_point> factionCooldowns;
 
 
 RE::TESFaction* GetFactionByActor(RE::Actor* actor) {
@@ -18,6 +29,26 @@ RE::TESFaction* GetFactionByActor(RE::Actor* actor) {
     return nullptr;
 }
 
+void CheckAndReAddPlayerToFaction(RE::Actor* player) {
+    auto now = std::chrono::steady_clock::now();
+    auto factions = GetRelevantFactions();
+
+    for (const auto& [factionName, faction] : factions) {
+        float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
+
+        if (factionCooldowns.find(faction) != factionCooldowns.end()) {
+            auto timeSinceRemoved = now - factionCooldowns[faction];
+            if (timeSinceRemoved < REJOIN_COOLDOWN) {
+                continue;
+            }
+        }
+
+        if (disguiseValue > 0 && !player->IsInFaction(faction)) {
+            player->AddToFaction(faction, 1);
+            factionCooldowns.erase(faction);
+        }
+    }
+}
 
 RE::BSEventNotifyControl HitEventHandler::ProcessEvent(const RE::TESHitEvent* evn,
                                                        RE::BSTEventSource<RE::TESHitEvent>* dispatcher) {
@@ -35,6 +66,7 @@ RE::BSEventNotifyControl HitEventHandler::ProcessEvent(const RE::TESHitEvent* ev
         if (faction && target->IsInFaction(faction)) {
             target->AddToFaction(faction, -1);
             RE::ConsoleLog::GetSingleton()->Print("Player removed from faction due to aggression.");
+            factionCooldowns[faction] = std::chrono::steady_clock::now();
         }
     } else if (aggressor && aggressor->IsPlayerRef() && target) {
         RE::ConsoleLog::GetSingleton()->Print("Player hit an NPC!");
@@ -43,6 +75,7 @@ RE::BSEventNotifyControl HitEventHandler::ProcessEvent(const RE::TESHitEvent* ev
         if (faction && aggressor->IsInFaction(faction)) {
             aggressor->AddToFaction(faction, -1);
             RE::ConsoleLog::GetSingleton()->Print("Player removed from faction due to aggression.");
+            factionCooldowns[faction] = std::chrono::steady_clock::now();
         }
     }
 

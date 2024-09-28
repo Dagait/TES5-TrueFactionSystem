@@ -7,3 +7,4 @@ public:
     virtual RE::BSEventNotifyControl ProcessEvent(const RE::TESEquipEvent *evn,
                                                   RE::BSTEventSource<RE::TESEquipEvent> *dispatcher) override;
 };
+void StartBackgroundTask(RE::Actor *player);

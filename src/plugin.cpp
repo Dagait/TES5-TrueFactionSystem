@@ -11,6 +11,7 @@ using namespace SKSE;
 using namespace RE;
 
 std::chrono::steady_clock::time_point lastCheckTime;
+
 constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(5);
 
 static EquipEventHandler g_equipEventHandler;
@@ -45,6 +46,7 @@ void StartBackgroundTask(Actor *player) {
                 if (elapsed >= CHECK_INTERVAL_SECONDS) {
                     RE::ConsoleLog::GetSingleton()->Print("Checking NPC detection...");
                     CheckNPCDetection(player);
+                    CheckAndReAddPlayerToFaction(player);
                     lastCheckTime = now;
                 }
             }

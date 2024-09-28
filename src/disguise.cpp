@@ -17,67 +17,71 @@ constexpr float FOREARMS_WEIGHT = 8.0f;
 constexpr float SHOES_WEIGHT = 5.0f;
 constexpr float CIRCLET_WEIGHT = 1.0f;
 
+constexpr const char* COVERED_FACE_TAG = "npeCoveredFace";
+
 // Global map to store NPCs, which have recognized the player (Disguised Value the player)
 std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
 constexpr std::chrono::minutes TIME_TO_LOSE_DETECTION(120);  // 2 hours
 
 PlayerDisguiseStatus playerDisguiseStatus;
 
+bool IsFaceCovered(Actor *actor) {
+    const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> helmetSlots = {
+        RE::BGSBipedObjectForm::BipedObjectSlot::kHead, RE::BGSBipedObjectForm::BipedObjectSlot::kHair,
+        RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet};
 
+    constexpr const char *COVERED_FACE_TAG = "npeCoveredFace";
 
-void CalculateDisguiseValue(Actor *actor, bool isEquipped) {
-    // Also check, if the armor belongs to a faction
-    RE::TESFaction *faction = GetFactionByArmorTag(actor);
-    float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
-
-    // TODO: Differ between equip and unequip
-    if (isEquipped) {
-        // Add the weight of the armor to the disguise value
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kBody) && faction) {
-            disguiseValue += CHEST_WEIGHT;
-        }
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kHead) && faction) {
-            disguiseValue += HELMET_WEIGHT;
-        }
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kHands) && faction) {
-            disguiseValue += GLOVES_WEIGHT;
-        }
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kForearms) && faction) {
-            disguiseValue += FOREARMS_WEIGHT;
-        }
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet) && faction) {
-            disguiseValue += CIRCLET_WEIGHT;
-        }
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kFeet) && faction) {
-            disguiseValue += SHOES_WEIGHT;
-        }
-    } else {
-        // Subtract the weight of the armor from the disguise value
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kBody) && faction) {
-            disguiseValue -= CHEST_WEIGHT;
-        }
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kHead) && faction) {
-            disguiseValue -= HELMET_WEIGHT;
-        }
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kHands) && faction) {
-            disguiseValue -= GLOVES_WEIGHT;
-        }
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kForearms) && faction) {
-            disguiseValue -= FOREARMS_WEIGHT;
-        }
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet) && faction) {
-            disguiseValue -= CIRCLET_WEIGHT;
-        }
-        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kFeet) && faction) {
-            disguiseValue -= SHOES_WEIGHT;
+    for (auto slot : helmetSlots) {
+        RE::TESObjectARMO *armor = actor->GetWornArmor(slot);
+        if (armor && armor->HasKeywordString(COVERED_FACE_TAG)) {
+            return true;
         }
     }
 
-    disguiseValue = disguiseValue > 100 ? 100 : abs(disguiseValue);
+    return false;
+}
+
+
+void CalculateDisguiseValue(Actor *actor, bool isEquipped) {
+    RE::TESFaction *faction = GetFactionByArmorTag(actor);
+    float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
+    bool isFaceCovered = IsFaceCovered(actor) && faction;
+
+    if (isEquipped && isFaceCovered) {
+        // If equipped and face is covered, disguise is 100%
+        disguiseValue = 100.0f;
+    } else {
+        // Define armor slots and their corresponding weights
+        struct ArmorSlot {
+            RE::BGSBipedObjectForm::BipedObjectSlot slot;
+            float weight;
+        };
+        const std::vector<ArmorSlot> armorSlots = {
+            {RE::BGSBipedObjectForm::BipedObjectSlot::kBody, CHEST_WEIGHT},
+            {RE::BGSBipedObjectForm::BipedObjectSlot::kHands, GLOVES_WEIGHT},
+            {RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, FOREARMS_WEIGHT},
+            {RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet, CIRCLET_WEIGHT},
+            {RE::BGSBipedObjectForm::BipedObjectSlot::kFeet, SHOES_WEIGHT},
+            {RE::BGSBipedObjectForm::BipedObjectSlot::kHead, HELMET_WEIGHT}};
+
+        for (const auto &slot : armorSlots) {
+            RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
+            if (armor && faction) {
+                // Add or subtract the armor's weight based on whether it's equipped or unequipped
+                disguiseValue += isEquipped ? slot.weight : -slot.weight;
+            }
+        }
+    }
+
+    // Clamp the disguise value between 0 and 100
+    disguiseValue = std::clamp(disguiseValue, 0.0f, 100.0f);
     playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
+
     RE::ConsoleLog::GetSingleton()->Print(
         ("Updated Disguise Value for faction: " + std::to_string(disguiseValue)).c_str());
 }
+
 
 float GetDetectionProbability(float disguiseValue) {
     return abs(100.0f - disguiseValue);
