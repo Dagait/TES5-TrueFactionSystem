@@ -1,42 +1,53 @@
 # True Faction Manager (TFM)
 
-True Faction Manager is an SKSE plugin for Skyrim Special Edition that allows the player to act as a member of different factions depending on the armor worn. The plugin uses dynamic faction detection based on the faction armor worn and adjusts the behavior of NPCs accordingly. 
+The **True Faction Manager** is an SKSE plugin for Skyrim Special Edition that allows the player to act as a member of various factions depending on the armor worn. The plugin uses dynamic faction recognition based on faction armors and adjusts NPC behavior accordingly.
 
-## Functionalities
+## Features
 
-- **Dynamic faction affiliation**: If the player is wearing armor associated with a specific faction (e.g. Bandits, Imperials, Stormcloaks), they will be recognized as an ally to NPCs of that faction and will not be attacked.
-  
-- **Recognition mechanism based on disguise**: The player is not immediately recognized by faction NPCs. The probability of being detected depends on the armor worn and how close the player approaches the NPCs.
+- **Dynamic Faction Affiliation**: When the player wears armor associated with a specific faction (e.g., Bandits, Imperials, Stormcloaks), they are recognized as an ally by NPCs of that faction and are not attacked.
 
-- **Armor-based camouflage**: Each armor has a “Disguise Value”. The higher this value, the less likely the player is to be detected. If the disguise value is below a certain threshold, the player will be recognized as an enemy by faction NPCs and attacked.
+- **Multiple Faction Support**: The player can wear armor pieces from different factions simultaneously and will be recognized as an ally by NPCs from multiple factions accordingly.
 
-## Installation instructions
+- **Detection Based on Stealth Value**: The likelihood of NPCs recognizing the player as an enemy depends on the stealth value of the armor worn and proximity to the NPCs.
 
-1. make sure that you have **SKSE64** (Skyrim Script Extender) installed.
-2. copy the `.dll` file into your Skyrim `SKSE/Plugins` folder.
-3. load the game and test the plugin by wearing faction armor and approaching the associated faction NPCs.
+- **Armor-Based Stealth**: Each piece of armor has an individual "stealth value." The higher the value, the less likely the player is to be recognized by NPCs. If the stealth value falls below a certain threshold, the player is identified as an enemy and attacked.
 
-## Instructions for use
+- **Background Check**: A background process regularly checks (every 5 seconds for now) faction affiliation and detection probability without requiring the player to change their armor.
 
-- If you are wearing a faction's armor, such as bandit armor, you can walk into a bandit camp undetected. The NPCs will only attack you when they realize that you are not a real bandit (depending on your stealth value and proximity).
-- If you are not wearing faction armor or your stealth level is too low, the NPCs will regard you as an enemy as usual.
+## Installation Instructions
 
-## Development and future goals
+1. **SKSE64** (Skyrim Script Extender) must be installed.
+2. Copy the `.dll` file into your `Skyrim/Data/SKSE/Plugins` folder.
+3. Start the game and test the plugin by wearing faction armors and approaching the corresponding faction NPCs.
 
-### Current features:
+## Usage Instructions
 
-- **Faction-specific recognition**: Depending on the armor, the system recognizes which faction the player might belong to.
-- **Probability of detection**: The armor's stealth value affects how likely the player is to be detected.
-- **Combat behavior**: NPCs attack the player if they recognize him as an enemy.
+- **Wearing Faction Armor**: When you wear armor from a faction (e.g., Bandit Armor), you can move undetected within that faction's camps. NPCs will only attack you if they recognize that you do not truly belong to their faction.
 
-### Planned features:
+- **Mixing Faction Armors**: You can combine armor pieces from different factions. The stealth value for each faction is calculated individually based on the worn armor pieces belonging to that faction.
 
-- [ ] **Background detection system**: Implementation of a background process that automatically checks faction affiliation and detection probability every few seconds without the player having to change their armor.
-- [ ] **Advanced faction integration**: Support for more factions such as the Thalmor, Thieves Guild and others.
-- [ ] **Improved detection logic**: Consideration of NPC level, line of sight, environment and other factors in faction detection.
-- [ ] **Quest integration**: Possible integration into existing quests to adjust NPC behavior depending on player stealth.
-- [ ] **Mod support**: Support for custom faction armor and factions from mods.
+- **Approaching NPCs**: The closer you get to NPCs, the higher the chance they will recognize you as an enemy, especially if your stealth value for their faction is low.
 
-## Known issues
+- **Switching Gear**: The stealth value is automatically updated when you equip or unequip items. An event handler monitors equipment changes and adjusts faction affiliation accordingly.
 
-- Currently, the faction and camouflage check is only performed when the player changes their armor. The implementation of a background process that regularly checks this is still in progress.
+## Development and Future Goals
+
+### Current Features:
+
+- Extended faction detection: Support for multiple factions simultaneously, based on worn armor pieces.
+- Dynamic stealth value: Calculation of stealth value for each faction individually, depending on worn faction armors.
+- Background process: Automatic checking of faction affiliation and detection probability every 5 seconds without player intervention.
+- Combat system: NPCs will attack the player when they recognize them as an enemy. Attacking faction NPCs removes the player from that faction.
+
+### Planned Features:
+
+- Improved detection logic: Considering NPC level, line of sight, environment, and other factors in faction detection.
+- Quest integration: Possible integration into existing quests to adjust NPC behavior based on the player’s disguise.
+- Mod support: Support for custom faction armors and factions from mods.
+- Configurable settings: Allow players to customize settings such as check intervals, stealth thresholds, and more.
+
+## Known Issues
+
+- **Faction change delay**: There may be a slight delay before the player's faction affiliation is updated, as the check occurs at intervals.
+- **Detection logic**: Currently, the detection probability is primarily based on stealth value and distance. Additional factors are not yet implemented.
+- **Compatibility with other mods**: The plugin may conflict with mods that alter factions or armor keywords. Comprehensive mod compatibility is planned.
