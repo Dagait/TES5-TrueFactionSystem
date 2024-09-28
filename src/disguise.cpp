@@ -1,6 +1,7 @@
 #include "disguise.h"
 #include "faction.h"
 #include "npcdetectiondata.h"
+#include "disguisedata.h"
 
 #include <cmath>
 #include <unordered_map>
@@ -16,18 +17,18 @@ constexpr float FOREARMS_WEIGHT = 8.0f;
 constexpr float SHOES_WEIGHT = 5.0f;
 constexpr float CIRCLET_WEIGHT = 1.0f;
 
-constexpr RE::ActorValue kDisguiseValue = static_cast<RE::ActorValue>(1);
 // Global map to store NPCs, which have recognized the player (Disguised Value the player)
 std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
 constexpr std::chrono::minutes TIME_TO_LOSE_DETECTION(120);  // 2 hours
 
+PlayerDisguiseStatus playerDisguiseStatus;
 
 
-float CalculateDisguiseValue(Actor *actor, bool isEquipped) {
-    float disguiseValue = abs(actor->AsActorValueOwner()->GetActorValue(kDisguiseValue));
 
+void CalculateDisguiseValue(Actor *actor, bool isEquipped) {
     // Also check, if the armor belongs to a faction
     RE::TESFaction *faction = GetFactionByArmorTag(actor);
+    float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
 
     // TODO: Differ between equip and unequip
     if (isEquipped) {
@@ -72,7 +73,10 @@ float CalculateDisguiseValue(Actor *actor, bool isEquipped) {
         }
     }
 
-    return disguiseValue > 100 ? 100 : abs(disguiseValue);
+    disguiseValue = disguiseValue > 100 ? 100 : abs(disguiseValue);
+    playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
+    RE::ConsoleLog::GetSingleton()->Print(
+        ("Updated Disguise Value for faction: " + std::to_string(disguiseValue)).c_str());
 }
 
 float GetDetectionProbability(float disguiseValue) {
@@ -84,8 +88,8 @@ float AdjustProbabilityByDistance(float detectionProbability, float distance, fl
     return detectionProbability * distanceFactor;
 }
 
-bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player) {
-    float playerDisguiseValue = abs(player->AsActorValueOwner()->GetActorValue(kDisguiseValue));
+bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
+    float playerDisguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
     float distance = abs(npc->GetPosition().GetDistance(player->GetPosition()));
 
     float recognitionProbability = (100.0f - playerDisguiseValue) / 100.0f;
@@ -124,13 +128,13 @@ void CheckNPCDetection(RE::Actor* player) {
         return;
     }
 
-    float disguiseValue = player->AsActorValueOwner()->GetActorValue(kDisguiseValue);
     bool playerDetected = false;
-
     auto factions = GetRelevantFactions();
     auto now = std::chrono::steady_clock::now();
 
     for (auto &[factionName, faction] : factions) {
+        float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
+
         currentCell->ForEachReferenceInRange(player->GetPosition(), DETECTION_RADIUS, [&](RE::TESObjectREFR &ref) {
             RE::Actor *npc = skyrim_cast<RE::Actor *>(&ref);
             if (npc && npc != player && npc->IsInFaction(faction)) {  // Check if NPC is in the relevant faction
@@ -142,7 +146,7 @@ void CheckNPCDetection(RE::Actor* player) {
                 float detectionProbability = GetDetectionProbability(disguiseValue);
                 detectionProbability = AdjustProbabilityByDistance(detectionProbability, distance, DETECTION_RADIUS);
 
-                if (NPCRecognizesPlayer(npc, player)) {
+                if (NPCRecognizesPlayer(npc, player, faction)) {
                     playerDetected = true;
 
                     // NPC has recognized the player, add to map
@@ -164,20 +168,26 @@ void CheckNPCDetection(RE::Actor* player) {
 
 void UpdateDisguiseValue(Actor *actor, bool isEquipped) {
     // Calculate the disguise value based on equipped armor
-    float disguiseValue = CalculateDisguiseValue(actor, isEquipped);
+    RE::TESFaction *faction = GetFactionByArmorTag(actor);
+    CalculateDisguiseValue(actor, isEquipped);
 
     // Set the actor's custom disguise value
-    actor->AsActorValueOwner()->SetActorValue(kDisguiseValue, disguiseValue);
+    float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
+    playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
 
     RE::ConsoleLog::GetSingleton()->Print(("Current Disguise Value: " + std::to_string(disguiseValue)).c_str());
-
-    // Get the faction corresponding to the armor worn by the player
-    RE::TESFaction *faction = GetFactionByArmorTag(actor);
 
     if (faction && !actor->IsInFaction(faction)) {
         // Add the player to the faction if they are wearing faction armor
         actor->AddToFaction(faction, 1);
         RE::ConsoleLog::GetSingleton()->Print("Player added to faction!");
+    } else if (faction && actor->IsInFaction(faction)) {
+        // Entferne den Spieler aus der Fraktion, wenn der Disguise-Wert nicht mehr ausreicht
+        if (disguiseValue <= 0) {
+            actor->AddToFaction(faction, -1);
+            playerDisguiseStatus.RemoveDisguiseValue(faction);
+            RE::ConsoleLog::GetSingleton()->Print("Player removed from faction due to low disguise value.");
+        }
     }
 
     CheckNPCDetection(actor);
