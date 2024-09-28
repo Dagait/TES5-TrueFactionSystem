@@ -6,6 +6,31 @@ const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
     {"npeStormcloakFaction", 0x00028849},  // Stormcloak faction
 };
 
+std::vector<std::pair<std::string, RE::TESFaction *>> GetRelevantFactions() {
+    // Hier fügen wir die relevanten Fraktionen hinzu
+    std::vector<std::pair<std::string, RE::TESFaction *>> factions;
+
+    // BanditFaction
+    RE::TESFaction *banditFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x0001BCC0);
+    if (banditFaction) {
+        factions.push_back({"BanditFaction", banditFaction});
+    }
+
+    // Imperial Legion
+    RE::TESFaction *imperialFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x0002BF9A);
+    if (imperialFaction) {
+        factions.push_back({"ImperialFaction", imperialFaction});
+    }
+
+    // Stormcloaks
+    RE::TESFaction *stormcloakFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x00028849);
+    if (stormcloakFaction) {
+        factions.push_back({"StormcloakFaction", stormcloakFaction});
+    }
+
+    return factions;
+}
+
 RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
     if (!actor) {
         return nullptr;
@@ -27,48 +52,4 @@ RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
     }
 
     return nullptr;
-}
-
-
-void ModifyFactionDetection(Actor *actor, float disguiseValue, RE::TESFaction *faction) {
-    /* TODO: Implement NPC faction detection logic:
-     * 1. The higher the disguise value, the less likely NPCs will detect the player as an enemy.
-     *    - NPCs should detect the player within a smaller detection radius if the disguise value is high.
-     *
-     * 2. Add the player to the relevant faction if they are wearing faction armor,
-     *    even if they are only wearing one piece of armor.
-     *
-     * 3. Probability-based detection:
-     *    - Example: If the player has a disguise value of 80, the NPC will only notice that
-     *      the player is not really part of the faction when the player gets too close.
-     *    - The probability of detection increases based on the player's proximity to the NPC,
-     *      and this should be dynamically calculated based on the player's disguise value.
-     *
-     * 4. Random removal from faction:
-     *    - If the player gets too close and is detected, they should be randomly removed from the faction
-     *      (e.g., a 20% chance of being detected and removed).
-     *
-     * 5. Optional improvements:
-     *    - Implement a mechanic where the disguise value decreases based on the player's actions (e.g., aggressive
-     * actions or loud behavior).
-     *    - If the disguise value is high, the player could walk past faction NPCs without arousing suspicion.
-     *    - Add visual or audio cues to warn the player when they are about to be detected.
-     */
-
-    // Step 1: Modify faction detection based on disguise value
-    if (faction) {
-        if (disguiseValue <= 60) {
-            // If the player's disguise value is too low, remove them from the faction
-            if (actor->IsInFaction(faction)) {
-                actor->AddToFaction(faction, -1);
-                RE::ConsoleLog::GetSingleton()->Print("Player removed from faction due to low disguise.");
-            }
-        } else {
-            // If the player's disguise value is high enough, add them to the faction
-            if (!actor->IsInFaction(faction)) {
-                actor->AddToFaction(faction, 1);
-                RE::ConsoleLog::GetSingleton()->Print("Player added to faction due to high disguise.");
-            }
-        }
-    }
 }

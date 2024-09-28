@@ -1,53 +1,75 @@
 #include "disguise.h"
-
 #include "faction.h"
 
-constexpr RE::ActorValue kDisguiseValue = static_cast<RE::ActorValue>(0);
+#include <cmath>
 
 
-float CalculateDisguiseValue(Actor *actor) {
-    float disguiseValue = 0.0f;
+constexpr float DETECTION_RADIUS = 250.0f;
 
-    // List of armor weights (Need to be adjusted)
-    constexpr float chestWeight = 70.0f;
-    constexpr float helmetWeight = 15.0f;
-    constexpr float glovesWeight = 4.0f;
-    constexpr float forearmsWeight = 8.0f;
-    constexpr float shoesWeight = 5.0f;
-    constexpr float circletWeight = 1.0f;
+constexpr float CHEST_WEIGHT = 70.0f;
+constexpr float HELMET_WEIGHT = 15.0f;
+constexpr float GLOVES_WEIGHT = 4.0f;
+constexpr float FOREARMS_WEIGHT = 8.0f;
+constexpr float SHOES_WEIGHT = 5.0f;
+constexpr float CIRCLET_WEIGHT = 1.0f;
 
-    if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kBody)) {
-        disguiseValue += chestWeight;
-    }
-    if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kHead)) {
-        disguiseValue += helmetWeight;
-    }
-    if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kHands)) {
-        disguiseValue += glovesWeight;
-    }
-    if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kForearms)) {
-        disguiseValue += forearmsWeight;
-    }
-    if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet)) {
-        disguiseValue += circletWeight;
-    }
-    if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kFeet)) {
-        disguiseValue += shoesWeight;
+constexpr RE::ActorValue kDisguiseValue = static_cast<RE::ActorValue>(1);
+
+
+float CalculateDisguiseValue(Actor *actor, bool isEquipped) {
+    float disguiseValue = abs(actor->AsActorValueOwner()->GetActorValue(kDisguiseValue));
+
+    // Also check, if the armor belongs to a faction
+    RE::TESFaction *faction = GetFactionByArmorTag(actor);
+
+    // TODO: Differ between equip and unequip
+    if (isEquipped) {
+        // Add the weight of the armor to the disguise value
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kBody) && faction) {
+            disguiseValue += CHEST_WEIGHT;
+        }
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kHead) && faction) {
+            disguiseValue += HELMET_WEIGHT;
+        }
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kHands) && faction) {
+            disguiseValue += GLOVES_WEIGHT;
+        }
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kForearms) && faction) {
+            disguiseValue += FOREARMS_WEIGHT;
+        }
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet) && faction) {
+            disguiseValue += CIRCLET_WEIGHT;
+        }
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kFeet) && faction) {
+            disguiseValue += SHOES_WEIGHT;
+        }
+    } else {
+        // Subtract the weight of the armor from the disguise value
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kBody) && faction) {
+            disguiseValue -= CHEST_WEIGHT;
+        }
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kHead) && faction) {
+            disguiseValue -= HELMET_WEIGHT;
+        }
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kHands) && faction) {
+            disguiseValue -= GLOVES_WEIGHT;
+        }
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kForearms) && faction) {
+            disguiseValue -= FOREARMS_WEIGHT;
+        }
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet) && faction) {
+            disguiseValue -= CIRCLET_WEIGHT;
+        }
+        if (actor->GetWornArmor(RE::BGSBipedObjectForm::BipedObjectSlot::kFeet) && faction) {
+            disguiseValue -= SHOES_WEIGHT;
+        }
     }
 
-    return disguiseValue;
+    return disguiseValue > 100 ? 100 : abs(disguiseValue);
 }
 
 float GetDetectionProbability(float disguiseValue) {
-    return 100.0f - disguiseValue;
-}
-
-bool IsPlayerDetected(float disguiseValue) {
-    float detectionProbability = GetDetectionProbability(disguiseValue);
-
-    // Generate a random value between 0 and 100
-    float randomValue = static_cast<float>(rand() % 101);
-    return randomValue <= detectionProbability;
+    return abs(100.0f - disguiseValue);
 }
 
 float AdjustProbabilityByDistance(float detectionProbability, float distance, float maxDistance) {
@@ -55,43 +77,67 @@ float AdjustProbabilityByDistance(float detectionProbability, float distance, fl
     return detectionProbability * distanceFactor;
 }
 
-bool CheckNPCDetection(RE::Actor* player, float disguiseValue) {
+bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player) {
+    float playerDisguiseValue = abs(player->AsActorValueOwner()->GetActorValue(kDisguiseValue));
+
+    float distance = abs(npc->GetPosition().GetDistance(player->GetPosition()));
+
+    float recognitionProbability = (100.0f - playerDisguiseValue) / 100.0f;
+    recognitionProbability *= (distance / DETECTION_RADIUS);
+
+    float randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+    return randomValue < recognitionProbability;
+}
+
+/**
+ * Check if NPCs detect the player based the player's disguise value
+ * @param player The player actor
+*/
+void CheckNPCDetection(RE::Actor* player) {
     RE::TESObjectCELL* currentCell = player->GetParentCell();
     if (!currentCell) {
-        return false;
+        RE::ConsoleLog::GetSingleton()->Print("Player is not in a cell!");
+        return;
     }
 
-    float detectionRadius = 500.0f;
-
+    float disguiseValue = player->AsActorValueOwner()->GetActorValue(kDisguiseValue);
     bool playerDetected = false;
 
-    currentCell->ForEachReferenceInRange(player->GetPosition(), detectionRadius, [&](RE::TESObjectREFR& ref) {
-        RE::Actor* npc = skyrim_cast<RE::Actor*>(&ref);
-        if (npc && npc != player) {
-            float distance = player->GetPosition().GetDistance(npc->GetPosition());
+    auto factions = GetRelevantFactions();
 
-            // Calculate the detection probability based on the player's disguise value
-            float detectionProbability = GetDetectionProbability(disguiseValue);
-            detectionProbability = AdjustProbabilityByDistance(detectionProbability, distance, detectionRadius);
+    for (auto &[factionName, faction] : factions) {
+        currentCell->ForEachReferenceInRange(player->GetPosition(), DETECTION_RADIUS, [&](RE::TESObjectREFR &ref) {
+            RE::Actor *npc = skyrim_cast<RE::Actor *>(&ref);
+            if (npc && npc != player && npc->IsInFaction(faction)) {  // Check if NPC is in the relevant faction
+                RE::ConsoleLog::GetSingleton()
+                    ->Print(("NPC " + std::to_string(npc->GetFormID()) + " from " + factionName + " is near!").c_str());
+                float distance = abs(player->GetPosition().GetDistance(npc->GetPosition()));
 
-            if (IsPlayerDetected(detectionProbability)) {
-                RE::ConsoleLog::GetSingleton()->Print(
-                    ("NPC " + std::to_string(npc->GetFormID()) + " detected the player!").c_str());
-                playerDetected = true;
-                return BSContainer::ForEachResult::kStop;
+                // Calculate the detection probability based on the player's disguise value
+                float detectionProbability = GetDetectionProbability(disguiseValue);
+                detectionProbability = AdjustProbabilityByDistance(detectionProbability, distance, DETECTION_RADIUS);
+
+                if (NPCRecognizesPlayer(npc, player)) {
+                    playerDetected = true;
+                    RE::ConsoleLog::GetSingleton()->Print("Player detected by nearby NPCs!");
+                    player->AddToFaction(faction, -1);  // Remove from faction if detected
+                    return BSContainer::ForEachResult::kStop;
+                }
             }
+            return BSContainer::ForEachResult::kContinue;
+        });
+
+        if (playerDetected) {
+            break;
         }
-
-        return BSContainer::ForEachResult::kContinue;
-    });
-
-    return playerDetected;
+    }
 }
 
 
-void UpdateDisguiseValue(Actor *actor) {
+void UpdateDisguiseValue(Actor *actor, bool isEquipped) {
     // Calculate the disguise value based on equipped armor
-    float disguiseValue = CalculateDisguiseValue(actor);
+    float disguiseValue = CalculateDisguiseValue(actor, isEquipped);
 
     // Set the actor's custom disguise value
     actor->AsActorValueOwner()->SetActorValue(kDisguiseValue, disguiseValue);
@@ -100,24 +146,12 @@ void UpdateDisguiseValue(Actor *actor) {
 
     // Get the faction corresponding to the armor worn by the player
     RE::TESFaction *faction = GetFactionByArmorTag(actor);
-    if (faction) {
-        // Modify the faction detection based on the disguise value
-        ModifyFactionDetection(actor, disguiseValue, faction);
-    } else {
-        RE::ConsoleLog::GetSingleton()->Print("No faction found!");
+
+    if (faction && !actor->IsInFaction(faction)) {
+        // Add the player to the faction if they are wearing faction armor
+        actor->AddToFaction(faction, 1);
+        RE::ConsoleLog::GetSingleton()->Print("Player added to faction!");
     }
 
-    bool playerDetected = CheckNPCDetection(actor, disguiseValue);
-    if (playerDetected) {
-        // Player is detected by NPCs, modify behavior or remove from faction if necessary
-        RE::ConsoleLog::GetSingleton()->Print("Player detected by nearby NPCs!");
-
-        // Example: Remove player from faction when detected
-        if (faction) {
-            actor->AddToFaction(faction, -1);  // Remove from faction if detected
-            RE::ConsoleLog::GetSingleton()->Print("Player removed from faction due to detection.");
-        }
-    } else {
-        RE::ConsoleLog::GetSingleton()->Print("Player remains undetected.");
-    }
+    CheckNPCDetection(actor);
 }

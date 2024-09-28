@@ -1,11 +1,20 @@
 #include "plugin.h"
 #include "disguise.h"
 #include "faction.h"
+#include "combat.h"
 
-using namespace RE;
+#include "SKSE/Trampoline.h"
+#include <thread>
+#include <chrono>
+
 using namespace SKSE;
+using namespace RE;
+
+std::chrono::steady_clock::time_point lastCheckTime;
+constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(5);
 
 static EquipEventHandler g_equipEventHandler;
+static HitEventHandler g_hitEventHandler;
 
 RE::BSEventNotifyControl EquipEventHandler::ProcessEvent(const RE::TESEquipEvent *evn,
                                                          RE::BSTEventSource<RE::TESEquipEvent> *dispatcher) {
@@ -16,31 +25,58 @@ RE::BSEventNotifyControl EquipEventHandler::ProcessEvent(const RE::TESEquipEvent
     RE::ConsoleLog::GetSingleton()->Print("Equipment change detected!");
 
     Actor *actor = skyrim_cast<Actor *>(evn->actor.get());
+    bool isEquipped = evn->equipped;
 
     if (actor && actor->IsPlayerRef()) {
         RE::ConsoleLog::GetSingleton()->Print("Equipment change detected!");
-        UpdateDisguiseValue(actor);  // Update disguise value for player
+        UpdateDisguiseValue(actor, isEquipped);  // Update disguise value for player
     }
 
     return RE::BSEventNotifyControl::kContinue;
 }
 
+void StartDetectionTask(Actor *player) {
+    auto task = [player]() {
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = now - lastCheckTime;
+
+        if (elapsed >= CHECK_INTERVAL_SECONDS) {
+            RE::ConsoleLog::GetSingleton()->Print("Checking NPC detection...");
+            CheckNPCDetection(player);
+            lastCheckTime = now;
+        }
+
+        // Not working, always breaks the game (infinite loop)
+        SKSE::GetTaskInterface()->AddTask([player]() {
+            StartDetectionTask(player);
+        });
+    };
+    std::this_thread::sleep_for(CHECK_INTERVAL_SECONDS);
+    SKSE::GetTaskInterface()->AddTask(task);
+}
+
 SKSEPluginLoad(const LoadInterface *skse) {
     SKSE::Init(skse);
 
-    GetMessagingInterface()->RegisterListener([](MessagingInterface::Message *message) {
+    SKSE::GetMessagingInterface()->RegisterListener([](MessagingInterface::Message *message) {
         if (message->type == MessagingInterface::kDataLoaded) {
             RE::ConsoleLog::GetSingleton()->Print("Loading in TrueFactionSystem...");
 
             auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
             if (equipEventSource) {
                 equipEventSource->AddEventSink(&g_equipEventHandler);
-                RE::ConsoleLog::GetSingleton()->Print("TrueFactionSystem hook successful!");
+                RE::ConsoleLog::GetSingleton()->Print("EquipEventHandler registered!");
+            }
+
+            auto hitEventSource = RE::ScriptEventSourceHolder::GetSingleton();
+            if (hitEventSource) {
+                hitEventSource->AddEventSink(&g_hitEventHandler);
+                RE::ConsoleLog::GetSingleton()->Print("HitEventHandler registered!");
             }
 
             Actor *player = PlayerCharacter::GetSingleton();
             if (player) {
-                UpdateDisguiseValue(player);
+                lastCheckTime = std::chrono::steady_clock::now();
             }
         }
     });

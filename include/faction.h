@@ -5,4 +5,4 @@
 using namespace RE;
 
 RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor);
-void ModifyFactionDetection(Actor *actor, float disguiseValue, RE::TESFaction *faction);
+std::vector<std::pair<std::string, RE::TESFaction *>> GetRelevantFactions();

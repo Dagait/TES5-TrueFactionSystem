@@ -17,7 +17,13 @@ endif()
 find_package(CommonLibSSE CONFIG REQUIRED)
 
 # Add source files from the src directory
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+set(SOURCES
+    src/plugin.cpp
+    src/disguise.cpp
+    src/faction.cpp
+    src/combat.cpp
+)
+include_directories(src)
 
 # Add headers from the include directory
 include_directories(include)
