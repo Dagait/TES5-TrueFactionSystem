@@ -35,25 +35,24 @@ RE::BSEventNotifyControl EquipEventHandler::ProcessEvent(const RE::TESEquipEvent
     return RE::BSEventNotifyControl::kContinue;
 }
 
-void StartDetectionTask(Actor *player) {
-    auto task = [player]() {
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed = now - lastCheckTime;
+void StartBackgroundTask(Actor *player) {
+    std::thread([player]() {
+        while (true) {
+            if (player && player->IsPlayerRef()) {
+                auto now = std::chrono::steady_clock::now();
+                auto elapsed = now - lastCheckTime;
 
-        if (elapsed >= CHECK_INTERVAL_SECONDS) {
-            RE::ConsoleLog::GetSingleton()->Print("Checking NPC detection...");
-            CheckNPCDetection(player);
-            lastCheckTime = now;
+                if (elapsed >= CHECK_INTERVAL_SECONDS) {
+                    RE::ConsoleLog::GetSingleton()->Print("Checking NPC detection...");
+                    CheckNPCDetection(player);
+                    lastCheckTime = now;
+                }
+            }
+            std::this_thread::sleep_for(CHECK_INTERVAL_SECONDS);
         }
-
-        // Not working, always breaks the game (infinite loop)
-        SKSE::GetTaskInterface()->AddTask([player]() {
-            StartDetectionTask(player);
-        });
-    };
-    std::this_thread::sleep_for(CHECK_INTERVAL_SECONDS);
-    SKSE::GetTaskInterface()->AddTask(task);
+    }).detach();
 }
+
 
 SKSEPluginLoad(const LoadInterface *skse) {
     SKSE::Init(skse);
@@ -77,9 +76,16 @@ SKSEPluginLoad(const LoadInterface *skse) {
             Actor *player = PlayerCharacter::GetSingleton();
             if (player) {
                 lastCheckTime = std::chrono::steady_clock::now();
+                StartBackgroundTask(player);
             }
         }
     });
+
+    SKSE::GetSerializationInterface()->SetSaveCallback(
+        [](SKSE::SerializationInterface *a_intfc) { SaveDetectionData(a_intfc); });
+
+    SKSE::GetSerializationInterface()->SetLoadCallback(
+        [](SKSE::SerializationInterface *a_intfc) { LoadDetectionData(a_intfc); });
 
     return true;
 }

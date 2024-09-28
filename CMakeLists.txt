@@ -22,6 +22,7 @@ set(SOURCES
     src/disguise.cpp
     src/faction.cpp
     src/combat.cpp
+    src/npcdetectiondata.cpp
 )
 include_directories(src)
 

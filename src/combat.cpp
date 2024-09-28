@@ -33,7 +33,15 @@ RE::BSEventNotifyControl HitEventHandler::ProcessEvent(const RE::TESHitEvent* ev
         RE::TESFaction* faction = GetFactionByActor(aggressor);
 
         if (faction && target->IsInFaction(faction)) {
-            target->AddToFaction(faction, -1);  // Remove player from faction if attacked
+            target->AddToFaction(faction, -1);
+            RE::ConsoleLog::GetSingleton()->Print("Player removed from faction due to aggression.");
+        }
+    } else if (aggressor && aggressor->IsPlayerRef() && target) {
+        RE::ConsoleLog::GetSingleton()->Print("Player hit an NPC!");
+        RE::TESFaction* faction = GetFactionByActor(target);
+
+        if (faction && aggressor->IsInFaction(faction)) {
+            aggressor->AddToFaction(faction, -1);
             RE::ConsoleLog::GetSingleton()->Print("Player removed from faction due to aggression.");
         }
     }

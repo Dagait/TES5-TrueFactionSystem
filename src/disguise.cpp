@@ -1,7 +1,10 @@
 #include "disguise.h"
 #include "faction.h"
+#include "npcdetectiondata.h"
 
 #include <cmath>
+#include <unordered_map>
+#include <chrono>
 
 
 constexpr float DETECTION_RADIUS = 250.0f;
@@ -14,6 +17,10 @@ constexpr float SHOES_WEIGHT = 5.0f;
 constexpr float CIRCLET_WEIGHT = 1.0f;
 
 constexpr RE::ActorValue kDisguiseValue = static_cast<RE::ActorValue>(1);
+// Global map to store NPCs, which have recognized the player (Disguised Value the player)
+std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
+constexpr std::chrono::minutes TIME_TO_LOSE_DETECTION(120);  // 2 hours
+
 
 
 float CalculateDisguiseValue(Actor *actor, bool isEquipped) {
@@ -79,14 +86,30 @@ float AdjustProbabilityByDistance(float detectionProbability, float distance, fl
 
 bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player) {
     float playerDisguiseValue = abs(player->AsActorValueOwner()->GetActorValue(kDisguiseValue));
-
     float distance = abs(npc->GetPosition().GetDistance(player->GetPosition()));
 
     float recognitionProbability = (100.0f - playerDisguiseValue) / 100.0f;
     recognitionProbability *= (distance / DETECTION_RADIUS);
 
-    float randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    auto npcID = npc->GetFormID();
+    auto now = std::chrono::steady_clock::now();
 
+    if (recognizedNPCs.find(npcID) != recognizedNPCs.end()) {
+        NPCDetectionData &detectionData = recognizedNPCs[npcID];
+
+        auto timeSinceLastDetected = now - detectionData.lastDetectedTime;
+
+        if (timeSinceLastDetected < TIME_TO_LOSE_DETECTION) {
+            // If the NPC has detected the player before, increase the recognition probability
+            recognitionProbability += 0.5f;
+        } else {
+            // If time has passed since the last detection, reset the detection count
+            recognizedNPCs.erase(npcID);
+        }
+    }
+
+    // Zufälliger Wert für die Erkennung
+    float randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     return randomValue < recognitionProbability;
 }
 
@@ -105,6 +128,7 @@ void CheckNPCDetection(RE::Actor* player) {
     bool playerDetected = false;
 
     auto factions = GetRelevantFactions();
+    auto now = std::chrono::steady_clock::now();
 
     for (auto &[factionName, faction] : factions) {
         currentCell->ForEachReferenceInRange(player->GetPosition(), DETECTION_RADIUS, [&](RE::TESObjectREFR &ref) {
@@ -120,7 +144,10 @@ void CheckNPCDetection(RE::Actor* player) {
 
                 if (NPCRecognizesPlayer(npc, player)) {
                     playerDetected = true;
-                    RE::ConsoleLog::GetSingleton()->Print("Player detected by nearby NPCs!");
+
+                    // NPC has recognized the player, add to map
+                    recognizedNPCs[npc->GetFormID()] = {1, now};
+
                     player->AddToFaction(faction, -1);  // Remove from faction if detected
                     return BSContainer::ForEachResult::kStop;
                 }
@@ -154,4 +181,32 @@ void UpdateDisguiseValue(Actor *actor, bool isEquipped) {
     }
 
     CheckNPCDetection(actor);
+}
+
+void SaveDetectionData(SKSE::SerializationInterface *a_intfc) {
+    for (auto &[npcID, detectionData] : recognizedNPCs) {
+        a_intfc->WriteRecord('NPCD', 1, &npcID, sizeof(npcID));
+        a_intfc->WriteRecordData(&detectionData, sizeof(detectionData));
+    }
+}
+
+void LoadDetectionData(SKSE::SerializationInterface *a_intfc) {
+    std::uint32_t type;
+    std::uint32_t version;
+    std::uint32_t length;
+
+    while (a_intfc->GetNextRecordInfo(type, version, length)) {
+        RE::FormID npcID;
+        NPCDetectionData detectionData;
+
+        if (a_intfc->ReadRecordData(&npcID, sizeof(npcID))) {
+            if (length == sizeof(detectionData)) {
+                if (a_intfc->ReadRecordData(&detectionData, sizeof(detectionData))) {
+                    recognizedNPCs[npcID] = detectionData;
+                }
+            } else {
+                RE::ConsoleLog::GetSingleton()->Print("Record length mismatch!");
+            }
+        }
+    }
 }
