@@ -17,6 +17,7 @@
     #define M_PI 3.14159265358979323846
 #endif
 
+// Doesn't seem to take into account (Need to look into this one)
 constexpr float DETECTION_RADIUS = 1000.0f;
 
 // MCM Menu values for later...

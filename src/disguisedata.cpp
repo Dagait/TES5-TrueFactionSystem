@@ -23,7 +23,7 @@ void PlayerDisguiseStatus::Clear() { factionDisguiseMap.clear(); }
 void PlayerDisguiseStatus::Save(SKSE::SerializationInterface* a_intfc) {
     std::uint32_t size = factionDisguiseMap.size();
     a_intfc->WriteRecord('PDST', 1, &size, sizeof(size));
-
+    
     for (const auto& [faction, data] : factionDisguiseMap) {
         RE::FormID factionID = faction->GetFormID();
         a_intfc->WriteRecordData(&factionID, sizeof(factionID));
