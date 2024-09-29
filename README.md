@@ -98,7 +98,7 @@ $$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 
 ## Installation Instructions
 
-1. **SKSE64** (Skyrim Script Extender) must be installed.
+1. [**SKSE64**](https://skse.silverlock.org/) (1.6.1170) must be installed.
 2. Copy all the files  into your `Skyrim Special Edition/Data/` folder.
 3. Start the game and test the plugin by wearing faction armors and approaching the corresponding faction NPCs.
 
