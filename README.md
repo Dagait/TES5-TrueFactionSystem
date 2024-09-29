@@ -18,7 +18,7 @@ The **True Faction System** is an SKSE plugin for Skyrim Special Edition that al
 
 The detection probability is calculated based on the player's distance from NPCs and the player's disguise value. The probability decreases smoothly with distance and is determined by the following formula:
 
-$\[\text{distanceFactor} = \frac{1.0}{1.0 + \exp((\text{distance} - \text{DETECTION\_RADIUS}) \times 0.1)}\]$
+$\text{distanceFactor} = \frac{1.0}{1.0 + \exp((\text{distance} - \text{DETECTION\_RADIUS}) \times 0.1)}$
 
 This creates a smooth transition in the detection probability as the player gets further from the NPC. The graph below illustrates how detection probability decreases with distance:
 
@@ -30,20 +30,20 @@ The NPC's ability to detect the player is also influenced by their **Field of Vi
 
 The **FoV detection** is calculated using the **dot product** between the NPC's forward direction and the vector pointing from the NPC to the player. This determines the angle between these vectors, and if the angle is smaller than half of the defined FoV (e.g., 45° for a 90° field of view), the player is considered to be visible.
 
-$\[\cos(\theta) = \frac{\vec{npcForward} \cdot \vec{npcToPlayer}}{|\vec{npcForward}| |\vec{npcToPlayer}|}\]$
+$\cos(\theta) = \frac{\vec{npcForward} \cdot \vec{npcToPlayer}}{|\vec{npcForward}| |\vec{npcToPlayer}|}$
 
 Where:
-- $\(\theta\)$ is the angle between the NPC's forward direction and the vector pointing to the player.
-- $\(\vec{npcForward}\)$ is the normalized vector representing the NPC's facing direction.
-- $\(\vec{npcToPlayer}\)$ is the normalized vector from the NPC to the player.
+- $\theta$ is the angle between the NPC's forward direction and the vector pointing to the player.
+- $\vec{npcForward}$ is the normalized vector representing the NPC's facing direction.
+- $\vec{npcToPlayer}$ is the normalized vector from the NPC to the player.
 
-The angle $\(\theta\)$ between the two vectors is computed using the inverse cosine function:
+The angle $\theta$ between the two vectors is computed using the inverse cosine function:
 
-$\[\theta = \cos^{-1}(\text{dotProduct})\]$
+$\theta = \cos^{-1}(\text{dotProduct})$
 
-If the angle \(\theta\) is less than or equal to half of the field of view, the player is within the NPC's line of sight and detection becomes possible:
+If the angle $\theta$ is less than or equal to half of the field of view, the player is within the NPC's line of sight and detection becomes possible:
 
-$\[\theta \leq \frac{\text{fieldOfViewDegrees}}{2}\]$
+$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$
 
 ## Installation Instructions
 
