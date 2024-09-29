@@ -5,7 +5,7 @@ The **True Faction System** is an SKSE plugin for Skyrim Special Edition that al
 ## Features
 
 - **Dynamic Faction Affiliation**: When the player wears armor associated with a specific faction (e.g., Bandits, Imperials, Stormcloaks), they are recognized as an ally by NPCs of that faction and are not attacked.
-
+  
 - **Multiple Faction Support**: The player can wear armor pieces from different factions simultaneously and will be recognized as an ally by NPCs from multiple factions accordingly.
 
 - **Detection Based on Stealth Value**: The likelihood of NPCs recognizing the player as an enemy depends on the stealth value of the armor worn and proximity to the NPCs.
@@ -13,6 +13,18 @@ The **True Faction System** is an SKSE plugin for Skyrim Special Edition that al
 - **Armor-Based Stealth**: Each piece of armor has an individual "stealth value." The higher the value, the less likely the player is to be recognized by NPCs. If the stealth value falls below a certain threshold, the player is identified as an enemy and attacked.
 
 - **Background Check**: A background process regularly checks (every 5 seconds for now) faction affiliation and detection probability without requiring the player to change their armor.
+
+## Detection Probability Formula
+
+The detection probability is calculated based on the player's distance from NPCs and the player's disguise value. The probability decreases smoothly with distance and is determined by the following formula:
+
+\[
+\text{distanceFactor} = \frac{1.0}{1.0 + \exp((\text{distance} - \text{DETECTION\_RADIUS}) \times 0.1)}
+\]
+
+This creates a smooth transition in the detection probability as the player gets further from the NPC. The graph below illustrates how detection probability decreases with distance:
+
+![Detection Probability vs. Distance](images/tfs_comparison.png)
 
 ## Installation Instructions
 

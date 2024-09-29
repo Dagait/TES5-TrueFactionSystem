@@ -156,7 +156,7 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
 
     float recognitionProbability = (100.0f - playerDisguiseValue) / 100.0f;
 
-    float distanceFactor = 1.0f / std::pow((distance / DETECTION_RADIUS), 1.2f);
+    float distanceFactor = 1.0f / (1.0f + std::exp((distance - DETECTION_RADIUS) * 0.1f));
     recognitionProbability *= distanceFactor;
 
     // Level check for NPCs vs player
@@ -165,9 +165,7 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
     int levelDifference = abs(npcLevel - playerLevel);
 
     float levelFactor = 1.0f;
-    if (levelDifference >= 0) {
-        levelFactor += 0.08f * levelDifference;
-    }
+    levelFactor += 0.05f * std::log(1 + levelDifference);
 
     recognitionProbability *= levelFactor;
     // End level check
