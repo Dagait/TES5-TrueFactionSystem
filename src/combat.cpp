@@ -53,13 +53,10 @@ void CheckAndReAddPlayerToFaction(RE::Actor* player) {
             auto timeSinceRemoved = now - factionCooldowns[faction];
             if (timeSinceRemoved < REJOIN_COOLDOWN) {
                 continue;
+            } else if (timeSinceRemoved >= REJOIN_COOLDOWN && disguiseValue >= 5.0f && !player->IsInFaction(faction)) {
+                player->AddToFaction(faction, 1);
+                factionCooldowns.erase(faction);
             }
-        }
-
-        if (disguiseValue > 5.0f && !player->IsInFaction(faction)) {
-            // Does not work (Is the timer wrong?)
-            // player->AddToFaction(faction, 1);
-            factionCooldowns.erase(faction);
         }
     }
 }
@@ -81,7 +78,6 @@ RE::BSEventNotifyControl HitEventHandler::ProcessEvent(const RE::TESHitEvent* ev
             factionCooldowns[faction] = std::chrono::steady_clock::now();
         }
     } else if (aggressor && aggressor->IsPlayerRef() && target) {
-        RE::ConsoleLog::GetSingleton()->Print("Player hit an NPC!");
         RE::TESFaction* faction = GetFactionByActor(target);
 
         if (faction && aggressor->IsInFaction(faction)) {

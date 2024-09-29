@@ -124,7 +124,8 @@ bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees
     }
 
     float npcRotationZ = npc->data.angle.z;
-    RE::NiPoint3 npcForward(std::cos(npcRotationZ), std::sin(npcRotationZ), 0.0f);
+    float npcRotationZInRadians = npcRotationZ * (M_PI / 180.0f);
+    RE::NiPoint3 npcForward(std::cos(npcRotationZInRadians), std::sin(npcRotationZInRadians), 0.0f);
 
     RE::NiPoint3 npcToPlayer = player->GetPosition() - npc->GetPosition();
     float length = npcToPlayer.Length();
