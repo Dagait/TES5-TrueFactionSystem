@@ -29,6 +29,19 @@ RE::TESFaction* GetFactionByActor(RE::Actor* actor) {
     return nullptr;
 }
 
+void StartCombat(RE::Actor* npc, RE::Actor* player, RE::TESFaction* npcFaction) {
+    // TODO: Rework
+    if (!npc || !player) {
+        return;
+    }
+
+    if (npcFaction) {
+        player->AddToFaction(npcFaction, -1);
+    }
+}
+
+
+
 void CheckAndReAddPlayerToFaction(RE::Actor* player) {
     auto now = std::chrono::steady_clock::now();
     auto factions = GetRelevantFactions();
@@ -43,8 +56,9 @@ void CheckAndReAddPlayerToFaction(RE::Actor* player) {
             }
         }
 
-        if (disguiseValue > 0 && !player->IsInFaction(faction)) {
-            player->AddToFaction(faction, 1);
+        if (disguiseValue > 5.0f && !player->IsInFaction(faction)) {
+            // Does not work (Is the timer wrong?)
+            // player->AddToFaction(faction, 1);
             factionCooldowns.erase(faction);
         }
     }
@@ -60,12 +74,10 @@ RE::BSEventNotifyControl HitEventHandler::ProcessEvent(const RE::TESHitEvent* ev
     RE::Actor* aggressor = skyrim_cast<RE::Actor*>(evn->cause.get());
 
     if (target && target->IsPlayerRef() && aggressor) {
-        RE::ConsoleLog::GetSingleton()->Print("Player was hit by an NPC!");
         RE::TESFaction* faction = GetFactionByActor(aggressor);
 
         if (faction && target->IsInFaction(faction)) {
             target->AddToFaction(faction, -1);
-            RE::ConsoleLog::GetSingleton()->Print("Player removed from faction due to aggression.");
             factionCooldowns[faction] = std::chrono::steady_clock::now();
         }
     } else if (aggressor && aggressor->IsPlayerRef() && target) {
@@ -74,7 +86,6 @@ RE::BSEventNotifyControl HitEventHandler::ProcessEvent(const RE::TESHitEvent* ev
 
         if (faction && aggressor->IsInFaction(faction)) {
             aggressor->AddToFaction(faction, -1);
-            RE::ConsoleLog::GetSingleton()->Print("Player removed from faction due to aggression.");
             factionCooldowns[faction] = std::chrono::steady_clock::now();
         }
     }

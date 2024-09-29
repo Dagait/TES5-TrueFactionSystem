@@ -57,18 +57,18 @@ SKSEPluginLoad(const LoadInterface *skse) {
 
     SKSE::GetMessagingInterface()->RegisterListener([](MessagingInterface::Message *message) {
         if (message->type == MessagingInterface::kDataLoaded) {
-            RE::ConsoleLog::GetSingleton()->Print("Loading in TrueFactionSystem...");
+            RE::ConsoleLog::GetSingleton()->Print("Loading in TFS...");
 
             auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
             if (equipEventSource) {
                 equipEventSource->AddEventSink(&g_equipEventHandler);
-                RE::ConsoleLog::GetSingleton()->Print("EquipEventHandler registered!");
+                RE::ConsoleLog::GetSingleton()->Print("TFS: EquipEventHandler registered!");
             }
 
             auto hitEventSource = RE::ScriptEventSourceHolder::GetSingleton();
             if (hitEventSource) {
                 hitEventSource->AddEventSink(&g_hitEventHandler);
-                RE::ConsoleLog::GetSingleton()->Print("HitEventHandler registered!");
+                RE::ConsoleLog::GetSingleton()->Print("TFS: HitEventHandler registered!");
             }
 
             Actor *player = PlayerCharacter::GetSingleton();

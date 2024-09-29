@@ -11,3 +11,4 @@ public:
 };
 RE::TESFaction* GetFactionByActor(RE::Actor* actor);
 void CheckAndReAddPlayerToFaction(RE::Actor* player);
+void StartCombat(RE::Actor* npc, RE::Actor* player, RE::TESFaction* npcFaction);

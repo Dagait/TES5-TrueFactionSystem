@@ -14,3 +14,9 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
 void LoadDetectionData(SKSE::SerializationInterface *a_intfc);
 void SaveDetectionData(SKSE::SerializationInterface *a_intfc);
 bool IsFaceCovered(Actor *actor);
+bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees);
+bool IsInLineOfSight(RE::Actor *npc, RE::Actor *player);
+bool IsValidWeather(RE::TESWeather *weather);
+bool IsNightTime();
+bool IsPlayerInDarkArea(RE::Actor *player);
+void RemovePlayerFromAllFactions(Actor *player);

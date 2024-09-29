@@ -21,11 +21,9 @@ void PlayerDisguiseStatus::RemoveDisguiseValue(RE::TESFaction* faction) { factio
 void PlayerDisguiseStatus::Clear() { factionDisguiseMap.clear(); }
 
 void PlayerDisguiseStatus::Save(SKSE::SerializationInterface* a_intfc) {
-    // Speichere die Anzahl der Einträge in factionDisguiseMap
     std::uint32_t size = factionDisguiseMap.size();
     a_intfc->WriteRecord('PDST', 1, &size, sizeof(size));
 
-    // Speichere jeden Eintrag
     for (const auto& [faction, data] : factionDisguiseMap) {
         RE::FormID factionID = faction->GetFormID();
         a_intfc->WriteRecordData(&factionID, sizeof(factionID));

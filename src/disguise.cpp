@@ -1,17 +1,27 @@
 #include "disguise.h"
 #include "faction.h"
+#include "combat.h"
 #include "npcdetectiondata.h"
 #include "disguisedata.h"
 
 #include <cmath>
+#include <random>
 #include <unordered_map>
 #include <chrono>
+#include <future>
+#include <vector>
+#include <thread>
 
 
-constexpr float DETECTION_RADIUS = 250.0f;
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
 
-constexpr float CHEST_WEIGHT = 70.0f;
-constexpr float HELMET_WEIGHT = 15.0f;
+constexpr float DETECTION_RADIUS = 1000.0f;
+
+// MCM Menu values for later...
+constexpr float CHEST_WEIGHT = 30.0f;
+constexpr float HELMET_WEIGHT = 12.0f;
 constexpr float GLOVES_WEIGHT = 4.0f;
 constexpr float FOREARMS_WEIGHT = 8.0f;
 constexpr float SHOES_WEIGHT = 5.0f;
@@ -79,8 +89,6 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
     playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
 }
 
-
-
 float GetDetectionProbability(float disguiseValue) {
     return abs(100.0f - disguiseValue);
 }
@@ -90,12 +98,103 @@ float AdjustProbabilityByDistance(float detectionProbability, float distance, fl
     return detectionProbability * distanceFactor;
 }
 
+bool IsInLineOfSight(RE::Actor *npc, RE::Actor *player) {
+    if (!npc || !player) {
+        return false;
+    }
+
+    bool hasLineOfSight = false;
+    return npc->HasLineOfSight(player->AsReference(), hasLineOfSight);
+}
+
+bool IsValidWeather(RE::TESWeather *weather) {
+    // TODO: Check if the current weather is the same as the weather we are looking for
+    return false;
+}
+
+bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees = 90.0f) {
+    if (!npc || !player) {
+        return false;
+    }
+
+    float distance = npc->GetPosition().GetDistance(player->GetPosition());
+    if (distance > DETECTION_RADIUS) {
+        return false;
+    }
+
+    float npcRotationZ = npc->data.angle.z;
+    RE::NiPoint3 npcForward(std::cos(npcRotationZ), std::sin(npcRotationZ), 0.0f);
+
+    RE::NiPoint3 npcToPlayer = player->GetPosition() - npc->GetPosition();
+    float length = npcToPlayer.Length();
+    if (length > 0.0f) {
+        npcToPlayer /= length;
+    }
+
+    float dotProduct = npcForward.Dot(npcToPlayer);
+    dotProduct = std::clamp(dotProduct, -1.0f, 1.0f);
+
+    float angle = std::acos(dotProduct) * (180.0f / M_PI);
+
+    return angle <= (fieldOfViewDegrees / 2.0f);
+}
+
+bool IsNightTime() {
+    RE::Calendar *calendar = RE::Calendar::GetSingleton();
+    float currentHour = calendar->GetHour();
+    return (currentHour >= 20.0f || currentHour <= 6.0f);
+}
+
+bool IsPlayerInDarkArea(RE::Actor *player) {
+    // TODO: Implement this function to check if the player is in a dark area
+    RE::TESObjectCELL *cell = player->GetParentCell();
+    if (cell && cell->IsInteriorCell()) {
+        return true;
+    }
+    // TODO: Check for weather and light sources
+    return false;
+}
+
 bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
     float playerDisguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
     float distance = abs(npc->GetPosition().GetDistance(player->GetPosition()));
+    if (distance > DETECTION_RADIUS) {
+        return false;
+    }
 
     float recognitionProbability = (100.0f - playerDisguiseValue) / 100.0f;
-    recognitionProbability *= (distance / DETECTION_RADIUS);
+
+    float distanceFactor = 1.0f - (distance / DETECTION_RADIUS);
+    distanceFactor = std::clamp(distanceFactor, 0.0f, 1.0f);
+    recognitionProbability *= distanceFactor;
+
+    // Level check for NPCs vs player
+    int npcLevel = npc->GetLevel();
+    int playerLevel = player->GetLevel();
+    int levelDifference = abs(npcLevel - playerLevel);
+
+    float levelFactor = 1.0f;
+    if (levelDifference >= 0) {
+        levelFactor += 0.08f * levelDifference;
+    }
+
+    recognitionProbability *= levelFactor;
+    // End level check
+
+    if (IsNightTime()) {
+        // If it is night time and the player is not in a dark area, reduce the recognition probability
+        recognitionProbability *= 0.2f;
+    }
+    if (!IsPlayerInDarkArea(player)) {
+        // If the player is not in a dark area, reduce the recognition probability
+        recognitionProbability *= 0.3f;
+    }
+    if (IsValidWeather(RE::Sky::GetSingleton()->currentWeather)) {
+        // If the weather is not valid, reduce the recognition probability
+        recognitionProbability *= 0.2f;
+    }
+
+
 
     auto npcID = npc->GetFormID();
     auto now = std::chrono::steady_clock::now();
@@ -114,53 +213,83 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
         }
     }
 
-    float randomValue = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-    return randomValue < recognitionProbability;
+    static thread_local std::mt19937 gen(std::random_device{}());
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+    float randomValue = dist(gen);
+    recognitionProbability = std::clamp(recognitionProbability, 0.0f, 1.0f);
+    return randomValue <= recognitionProbability;
 }
 
 /**
  * Check if NPCs detect the player based the player's disguise value
- * @param player The player actor
+ * @param **player** The player actor
 */
-void CheckNPCDetection(RE::Actor* player) {
-    RE::TESObjectCELL* currentCell = player->GetParentCell();
+void CheckNPCDetection(RE::Actor *player) {
+    RE::TESObjectCELL *currentCell = player->GetParentCell();
     if (!currentCell) {
-        RE::ConsoleLog::GetSingleton()->Print("Player is not in a cell!");
+        // Player is not in a cell (e.g. in the main menu), return
         return;
     }
 
     bool playerDetected = false;
-    auto factions = GetRelevantFactions();
     auto now = std::chrono::steady_clock::now();
+    float detectionRadius = DETECTION_RADIUS;
 
-    for (auto &[factionName, faction] : factions) {
-        float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
+    std::vector<std::future<bool>> detectionFutures;
 
-        currentCell->ForEachReferenceInRange(player->GetPosition(), DETECTION_RADIUS, [&](RE::TESObjectREFR &ref) {
-            RE::Actor *npc = skyrim_cast<RE::Actor *>(&ref);
-            if (npc && npc != player && npc->IsInFaction(faction)) {  // Check if NPC is in the relevant faction
-                float distance = abs(player->GetPosition().GetDistance(npc->GetPosition()));
+    // Look for NPCs in the player's detection range
+    currentCell->ForEachReferenceInRange(player->GetPosition(), detectionRadius, [&](RE::TESObjectREFR &ref) {
+        RE::Actor *npc = skyrim_cast<RE::Actor *>(&ref);
+        /*
+        * Check if the reference is an actor and not the player
+         * The Player also needs to be in the NPC's line of sight and field of view
+        */
+        if (npc && npc != player) {
+            detectionFutures.push_back(std::async(std::launch::async, [&, npc]() {
+                bool isInLineOfSight = IsInLineOfSight(npc, player);
+                bool isInFieldOfView = IsInFieldOfView(npc, player);
 
-                // Calculate the detection probability based on the player's disguise value
-                float detectionProbability = GetDetectionProbability(disguiseValue);
-                detectionProbability = AdjustProbabilityByDistance(detectionProbability, distance, DETECTION_RADIUS);
-
-                if (NPCRecognizesPlayer(npc, player, faction)) {
-                    playerDetected = true;
-
-                    // NPC has recognized the player, add to map
-                    recognizedNPCs[npc->GetFormID()] = {1, now};
-
-                    player->AddToFaction(faction, -1);  // Remove from faction if detected
-                    return BSContainer::ForEachResult::kStop;
+                if (!isInLineOfSight && !isInFieldOfView) {
+                    return false;
                 }
-            }
-            return BSContainer::ForEachResult::kContinue;
-        });
 
-        if (playerDetected) {
-            break;
+                // Iterate through factions to check disguise values
+                for (const auto &[factionName, faction] : GetRelevantFactions()) {
+                    float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
+
+                    if (disguiseValue > 0.0f && npc->IsInFaction(faction)) {
+                        float distance = std::abs(player->GetPosition().GetDistance(npc->GetPosition()));
+
+                        // Calculate detection probability
+                        float detectionProbability = GetDetectionProbability(disguiseValue);
+                        detectionProbability =
+                            AdjustProbabilityByDistance(detectionProbability, distance, detectionRadius);
+
+                        if (NPCRecognizesPlayer(npc, player, faction)) {
+                            StartCombat(npc, player, faction);
+                            // NPC detected the player
+                            recognizedNPCs[npc->GetFormID()] = {1, now};
+                            return true;  // NPC detected the player
+                        }
+                    }
+                }
+                return false;  // NPC did not detect the player
+            }));
         }
+
+        return BSContainer::ForEachResult::kContinue;  // Continue with the next reference
+    });
+
+    for (auto &future : detectionFutures) {
+        if (future.get()) {
+            playerDetected = true;
+            break;  // Stop checking if the player is detected
+        }
+    }
+
+    if (playerDetected) {
+        return;
     }
 }
 
@@ -190,23 +319,12 @@ void UpdateDisguiseValue(Actor *actor) {
 
         float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
 
-        RE::ConsoleLog::GetSingleton()->Print(("Current Disguise Value for faction " +
-                                               std::to_string(faction->GetFormID()) + ": " +
-                                               std::to_string(disguiseValue))
-                                                  .c_str());
-
         if (!actor->IsInFaction(faction)) {
             actor->AddToFaction(faction, 1);
-            RE::ConsoleLog::GetSingleton()->Print(
-                ("Player added to faction " + std::to_string(faction->GetFormID())).c_str());
         } else {
             if (disguiseValue <= 5.0f) {
                 actor->AddToFaction(faction, -1);
                 playerDisguiseStatus.RemoveDisguiseValue(faction);
-                RE::ConsoleLog::GetSingleton()->Print(("Player removed from faction " +
-                                                       std::to_string(faction->GetFormID()) +
-                                                       " due to low disguise value.")
-                                                          .c_str());
             }
         }
     }
