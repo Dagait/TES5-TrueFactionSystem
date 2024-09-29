@@ -1,24 +1,75 @@
 # True Faction System (TFS)
 
+> ⚠️ **Warning: This mod is still a WIP and might break some quests. Use with caution!**
+>
+> [![Download Latest Release](https://img.shields.io/github/v/release/Dagait/TES5-TrueFactionSystem)](https://github.com/Dagait/TES5-TrueFactionSystem/releases/latest)
+
 The **True Faction System** is an SKSE plugin for Skyrim Special Edition that allows the player to act as a member of various factions depending on the armor worn. The plugin uses dynamic faction recognition based on faction armors and adjusts NPC behavior accordingly.
 
 ## Features
 
 - **Dynamic Faction Affiliation**: When the player wears armor associated with a specific faction (e.g., Bandits, Imperials, Stormcloaks), they are recognized as an ally by NPCs of that faction and are not attacked.
+
+<div align="center">
+
+| **Faction**         | **Tag**              | **Working** | **Reason** |
+|---------------------|----------------------|----------------------|----------------------|
+| Bandit Faction      | npeBanditFaction         | <ul><li>[x] </li></ul> | |
+| Imperial Faction    | npeImperialFaction       | <ul><li>[x] </li></ul> | |
+| Blades Faction      | npeBladesFaction         | <ul><li>[x] </li></ul> | |
+| Companions Faction  | npeCompanionsFaction     | <ul><li>[x] </li></ul> | |
+| Dawnguard Faction   | npeDawnguardFaction      | <ul><li>[ ] </li></ul> | Beacuse of the individual load order |
+| Dawnstar Faction    | npeDawnstarFaction       | <ul><li>[x] </li></ul> | |
+| Falkreath Faction   | npeFalkreathFaction      | <ul><li>[x] </li></ul> | |
+| Forsworn Faction    | npeForswornFaction       | <ul><li>[x] </li></ul> | |
+| Markarth Faction    | npeMarkarthFaction       | <ul><li>[x] </li></ul> | |
+| Morthal Faction     | npeMorthalFaction        | <ul><li>[x] </li></ul> | |
+| Nightingale Faction | npeNightingaleFaction    | <ul><li>[x] </li></ul> | |
+| Riften Faction      | npeRiftenFaction         | <ul><li>[x] </li></ul> | |
+| Solitude Faction    | npeSolitudeFaction       | <ul><li>[x] </li></ul> | |
+| Solstheim Faction   | npeSolstheimFaction      | <ul><li>[ ] </li></ul> | Beacuse of the individual load order |
+| Stormcloaks Faction | npeStormcloaksFaction    | <ul><li>[x] </li></ul> | |
+| Whiterun Faction    | npeWhiterunFaction       | <ul><li>[x] </li></ul> | |
+| Windhelm Faction    | npeWindhelmFaction       | <ul><li>[x] </li></ul> | |
+| Winterhold Faction  | npeWinterholdFaction     | <ul><li>[x] </li></ul> | |
+| Thalmor Faction     | npeThalmorFaction        | <ul><li>[x] </li></ul> | |
+
+Table 1: Currently implemented factions and their corresponding armor tags
+
+</div>
   
 - **Multiple Faction Support**: The player can wear armor pieces from different factions simultaneously and will be recognized as an ally by NPCs from multiple factions accordingly.
 
-- **Detection Based on Stealth Value**: The likelihood of NPCs recognizing the player as an enemy depends on the stealth value of the armor worn and proximity to the NPCs.
+- **Detection Based on Disguise Value**: The likelihood of NPCs recognizing the player as an enemy depends on the disguise value of the armor worn and proximity to the NPCs. If the Disguise value is less than 5.0, the faction will be removed. A disguise value of 100.0 would mean perfect disguise, which is currently not possible. But will be implemented (Fully covered face).
 
-- **Armor-Based Stealth**: Each piece of armor has an individual "stealth value." The higher the value, the less likely the player is to be recognized by NPCs. If the stealth value falls below a certain threshold, the player is identified as an enemy and attacked.
+<div align="center">
 
-- **Background Check**: A background process regularly checks (every 5 seconds for now) faction affiliation and detection probability without requiring the player to change their armor.
+| **Armor Slot**   | **Disguise Value (Weight)** |
+|------------------|-----------------------------|
+| Chest Armor      | 30.0                        |
+| Helmet           | 12.0                        |
+| Gloves           | 4.0                         |
+| Forearm Armor    | 8.0                         |
+| Shoes/Boots      | 5.0                         |
+| Circlet          | 1.0                         |
+
+Table 2: Armor slot - Disguise value representation
+
+</div>
+
+- **Improved Detection Logic**: The detection system takes into account: NPC level, line of sight, the surrounding environment (only time of day for now), in addition to proximity and disguise value.
+
+- **Background Check**: A background process regularly checks (every 2 seconds for now) faction affiliation and detection probability without requiring the player to change their armor.
+
 
 ## Detection Probability Formula
 
 The detection probability is calculated based on the player's distance from NPCs and the player's disguise value. The probability decreases smoothly with distance and is determined by the following formula:
 
-$\text{distanceFactor} = \frac{1.0}{1.0 + \exp((\text{distance} - \text{DETECTION\_RADIUS}) \times 0.1)}$
+```math
+\text{distanceFactor} = \frac{1.0}{1.0 + \exp((\text{distance} - \text{DETECTION}_\text{RADIUS}) \cdot 0.1)}
+```
+
 
 This creates a smooth transition in the detection probability as the player gets further from the NPC. The graph below illustrates how detection probability decreases with distance:
 
@@ -26,11 +77,11 @@ This creates a smooth transition in the detection probability as the player gets
 
 ## Field of View (FoV) Detection
 
-The NPC's ability to detect the player is also influenced by their **Field of View (FoV)**. The FoV is the angular range in which the NPC can observe the player. If the player is within this angular range, detection is possible.
+The NPC's ability to detect the player (expose the players disguise) is also influenced by their **Field of View (FoV)**. The FoV is the angular range in which the NPC can observe the player. If the player is within this angular range, detection is possible.
 
 The **FoV detection** is calculated using the **dot product** between the NPC's forward direction and the vector pointing from the NPC to the player. This determines the angle between these vectors, and if the angle is smaller than half of the defined FoV (e.g., 45° for a 90° field of view), the player is considered to be visible.
 
-$\cos(\theta) = \frac{\vec{npcForward} \cdot \vec{npcToPlayer}}{|\vec{npcForward}| |\vec{npcToPlayer}|}$
+$$\cos(\theta) = \frac{\vec{npcForward} \cdot \vec{npcToPlayer}}{|\vec{npcForward}| |\vec{npcToPlayer}|}$$
 
 Where:
 - $\theta$ is the angle between the NPC's forward direction and the vector pointing to the player.
@@ -39,16 +90,16 @@ Where:
 
 The angle $\theta$ between the two vectors is computed using the inverse cosine function:
 
-$\theta = \cos^{-1}(\text{dotProduct})$
+$$\theta = \cos^{-1}(\text{dotProduct})$$
 
 If the angle $\theta$ is less than or equal to half of the field of view, the player is within the NPC's line of sight and detection becomes possible:
 
-$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$
+$$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 
 ## Installation Instructions
 
 1. **SKSE64** (Skyrim Script Extender) must be installed.
-2. Copy the `.dll` file into your `Skyrim/Data/SKSE/Plugins` folder.
+2. Copy all the files  into your `Skyrim Special Edition/Data/` folder.
 3. Start the game and test the plugin by wearing faction armors and approaching the corresponding faction NPCs.
 
 ## Usage Instructions
@@ -72,10 +123,11 @@ $\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$
 
 ### Planned Features:
 
-- Improved detection logic: Considering NPC level, line of sight, environment, and other factors in faction detection.
-- Quest integration: Possible integration into existing quests to adjust NPC behavior based on the player’s disguise.
-- Mod support: Support for custom faction armors and factions from mods.
-- Configurable settings: Allow players to customize settings such as check intervals, stealth thresholds, and more.
+- **Quest integration**: Possible integration into existing quests to adjust NPC behavior based on the player’s disguise.
+- **Mod support**: Support for custom faction armors and factions from mods (MCM).
+- **Configurable settings**: Allow players to customize settings such as check intervals, stealth thresholds, and more.
+- **Location-Based NPC Memory**: NPCs will have the ability to remember the player's appearance based on the location. If the player is recognized in a certain area, the disguise may not work when they return to that location, making it harder to fool the same NPCs again. Currently, the NPC's FormID is stored for 2 hours of in-game time, during which time there is a higher probability that the NPC will be able to detect the player's disguise again.
+- **Race-Based Disguise**: Certain races will receive bonuses or penalties when wearing faction armors. For example, High Elves (Altmer) may have an easier time disguising as Thalmor agents, while Orcs or Nords may find it more difficult to pass unnoticed in Imperial factions. This adds an additional layer of immersion and strategy, as the player's race will influence how effectively they can blend in with different factions.
 
 ## Known Issues
 
