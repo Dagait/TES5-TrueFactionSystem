@@ -41,6 +41,7 @@ bool IsFaceCovered(Actor *actor) {
 
 void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
     float disguiseValue = 0.0f;
+    constexpr const char *COVERED_FACE_TAG = "npeCoveredFace";
 
     std::string factionTag = GetTagForFaction(faction);
     if (factionTag.empty()) {
@@ -50,6 +51,11 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
     for (const auto &slot : armorSlots) {
         RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
         if (armor) {
+            if (armor->HasKeywordString(COVERED_FACE_TAG)) {
+                playerDisguiseStatus.SetDisguiseValue(faction, 100);
+                return;
+            }
+
             if (armor->HasKeywordString(factionTag)) {
                 disguiseValue += slot.weight;
             }
@@ -96,7 +102,7 @@ bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees
 
     float npcRotationZ = npc->data.angle.z;
     float npcRotationZInRadians = npcRotationZ;
-    // This vector points into the wrong direction???
+
     RE::NiPoint3 npcForward(std::cos(npcRotationZInRadians), std::sin(npcRotationZInRadians), 0.0f);
 
     RE::NiPoint3 npcToPlayer = player->GetPosition() - npc->GetPosition();
@@ -107,10 +113,16 @@ bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees
 
     float dotProduct = npcForward.Dot(npcToPlayer);
     dotProduct = std::clamp(dotProduct, -1.0f, 1.0f);
+    float fovFactor = std::cos((fieldOfViewDegrees / 2.0f) * (M_PI / 180.0f));
 
-    float angle = std::acos(dotProduct) * (180.0f / M_PI);
-
-    return angle <= (fieldOfViewDegrees / 2.0f);
+    if (dotProduct >= fovFactor) {
+        // Fully inside the FOV
+        return true;
+    } else {
+        // Smooth falloff for detection outside the FOV
+        float falloffFactor = std::max(0.0f, (dotProduct + 1.0f) / (1.0f - fovFactor));
+        return falloffFactor > 0.0f;
+    }
 }
 
 bool IsNightTime() {
