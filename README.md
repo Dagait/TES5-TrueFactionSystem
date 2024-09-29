@@ -40,14 +40,14 @@ Table 1: Currently implemented factions and their corresponding armor tags
   
 - **Multiple Faction Support**: The player can wear armor pieces from different factions simultaneously and will be recognized as an ally by NPCs from multiple factions accordingly.
 
-- **Detection Based on Disguise Value**: The likelihood of NPCs recognizing the player as an enemy depends on the disguise value of the armor worn and proximity to the NPCs. If the Disguise value is less than 5.0, the faction will be removed. A disguise value of 100.0 would mean perfect disguise, which is currently not possible. But will be implemented (Fully covered face).
+- **Detection Based on Disguise Value**: The likelihood of NPCs recognizing the player as an enemy depends on the disguise value of the armor worn and proximity to the NPCs. If the Disguise value is less than 5.0, the faction will be removed. A disguise value of 100.0 would be perfect disguise, which can be achieved by wearing a full outfit (such as outfits that cover the player's face).
 
 <div align="center">
 
 | **Armor Slot**   | **Disguise Value (Weight)** |
 |------------------|-----------------------------|
 | Chest Armor      | 30.0                        |
-| Helmet           | 12.0                        |
+| Helmet           | 17.0                        |
 | Gloves           | 4.0                         |
 | Forearm Armor    | 8.0                         |
 | Shoes/Boots      | 5.0                         |
