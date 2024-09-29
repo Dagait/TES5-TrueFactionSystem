@@ -18,9 +18,9 @@ The **True Faction System** is an SKSE plugin for Skyrim Special Edition that al
 
 The detection probability is calculated based on the player's distance from NPCs and the player's disguise value. The probability decreases smoothly with distance and is determined by the following formula:
 
-\[
-\text{distanceFactor} = \frac{1.0}{1.0 + \exp((\text{distance} - \text{DETECTION\_RADIUS}) \times 0.1)}
-\]
+```
+distanceFactor = 1.0 / (1.0 + exp((distance - DETECTION_RADIUS) * 0.1))
+```
 
 This creates a smooth transition in the detection probability as the player gets further from the NPC. The graph below illustrates how detection probability decreases with distance:
 
