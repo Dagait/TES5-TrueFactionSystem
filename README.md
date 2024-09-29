@@ -13,7 +13,7 @@ The **True Faction System** is an SKSE plugin for Skyrim Special Edition that al
 <div align="center">
 
 | **Faction**         | **Tag**              | **Working** | **Reason** |
-|---------------------|----------------------|----------------------|----------------------|
+|---------------------|----------------------|:---:|----------------------|
 | Bandit Faction      | npeBanditFaction         | <ul><li>[x] </li></ul> | |
 | Imperial Faction    | npeImperialFaction       | <ul><li>[x] </li></ul> | |
 | Blades Faction      | npeBladesFaction         | <ul><li>[x] </li></ul> | |
@@ -37,6 +37,7 @@ The **True Faction System** is an SKSE plugin for Skyrim Special Edition that al
 Table 1: Currently implemented factions and their corresponding armor tags
 
 </div>
+There is also an exclusive tag called **npeCoveredFace**. This means that the player's disguise is at 100.0 and cannot be detected (exposed) until he attacks the faction or disguises himself.
   
 - **Multiple Faction Support**: The player can wear armor pieces from different factions simultaneously and will be recognized as an ally by NPCs from multiple factions accordingly.
 
@@ -45,7 +46,7 @@ Table 1: Currently implemented factions and their corresponding armor tags
 <div align="center">
 
 | **Armor Slot**   | **Disguise Value (Weight)** |
-|------------------|-----------------------------|
+|------------------|:---:|
 | Chest Armor      | 30.0                        |
 | Helmet           | 17.0                        |
 | Gloves           | 4.0                         |
