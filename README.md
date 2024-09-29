@@ -2,7 +2,7 @@
 
 > ⚠️ **Warning: This mod is still a WIP and might break some quests. Use with caution!**
 >
-> [![Download Latest Release](https://img.shields.io/github/v/release/Dagait/TES5-TrueFactionSystem)](https://github.com/Dagait/TES5-TrueFactionSystem/releases/latest)
+> [![Download Latest Release](https://img.shields.io/github/v/release/Dagait/TES5-TrueFactionSystem)](https://github.com/Dagait/TES5-TrueFactionSystem/releases/release/latest)
 
 The **True Faction System** is an SKSE plugin for Skyrim Special Edition that allows the player to act as a member of various factions depending on the armor worn. The plugin uses dynamic faction recognition based on faction armors and adjusts NPC behavior accordingly.
 
