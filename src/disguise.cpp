@@ -7,7 +7,6 @@
 #include <cmath>
 #include <random>
 #include <unordered_map>
-#include <chrono>
 #include <future>
 #include <vector>
 #include <thread>
@@ -18,7 +17,7 @@
 #endif
 
 // Doesn't seem to take into account (Need to look into this one)
-constexpr float DETECTION_RADIUS = 1000.0f;
+constexpr float DETECTION_RADIUS = 300.0f;
 
 // MCM Menu values for later...
 constexpr float CHEST_WEIGHT = 30.0f;
@@ -50,7 +49,7 @@ const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots = {
 
 // Global map to store NPCs, which have recognized the player (Disguised Value the player)
 std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
-constexpr std::chrono::minutes TIME_TO_LOSE_DETECTION(120);  // 2 hours
+constexpr float TIME_TO_LOSE_DETECTION = 2.0f;  // 2 hours
 
 PlayerDisguiseStatus playerDisguiseStatus;
 
@@ -166,8 +165,7 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
 
     float recognitionProbability = (100.0f - playerDisguiseValue) / 100.0f;
 
-    float distanceFactor = 1.0f - (distance / DETECTION_RADIUS);
-    distanceFactor = std::clamp(distanceFactor, 0.0f, 1.0f);
+    float distanceFactor = 1.0f / std::pow((distance / DETECTION_RADIUS), 2.0f);
     recognitionProbability *= distanceFactor;
 
     // Level check for NPCs vs player
@@ -199,12 +197,12 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
 
 
     auto npcID = npc->GetFormID();
-    auto now = std::chrono::steady_clock::now();
+    auto currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
 
     if (recognizedNPCs.find(npcID) != recognizedNPCs.end()) {
         NPCDetectionData &detectionData = recognizedNPCs[npcID];
 
-        auto timeSinceLastDetected = now - detectionData.lastDetectedTime;
+        auto timeSinceLastDetected = currentInGameHours - detectionData.lastDetectedTime;
 
         if (timeSinceLastDetected < TIME_TO_LOSE_DETECTION) {
             // If the NPC has detected the player before, increase the recognition probability
@@ -235,7 +233,7 @@ void CheckNPCDetection(RE::Actor *player) {
     }
 
     bool playerDetected = false;
-    auto now = std::chrono::steady_clock::now();
+    auto currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
     float detectionRadius = DETECTION_RADIUS;
 
     std::vector<std::future<bool>> detectionFutures;
@@ -271,7 +269,7 @@ void CheckNPCDetection(RE::Actor *player) {
                         if (NPCRecognizesPlayer(npc, player, faction)) {
                             StartCombat(npc, player, faction);
                             // NPC detected the player
-                            recognizedNPCs[npc->GetFormID()] = {1, now};
+                            recognizedNPCs[npc->GetFormID()] = {1, currentInGameHours};
                             return true;  // NPC detected the player
                         }
                     }

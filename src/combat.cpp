@@ -8,9 +8,9 @@
 
 
 extern PlayerDisguiseStatus playerDisguiseStatus;
-constexpr std::chrono::minutes REJOIN_COOLDOWN(120);
+constexpr float REJOIN_COOLDOWN = 2.0f;
 
-std::unordered_map<RE::TESFaction*, std::chrono::steady_clock::time_point> factionCooldowns;
+std::unordered_map<RE::TESFaction*, float> factionCooldowns;
 
 
 RE::TESFaction* GetFactionByActor(RE::Actor* actor) {
@@ -43,7 +43,7 @@ void StartCombat(RE::Actor* npc, RE::Actor* player, RE::TESFaction* npcFaction) 
 
 
 void CheckAndReAddPlayerToFaction(RE::Actor* player) {
-    auto now = std::chrono::steady_clock::now();
+    auto now = RE::Calendar::GetSingleton()->GetHoursPassed();
     auto factions = GetRelevantFactions();
 
     for (const auto& [factionName, faction] : factions) {
@@ -75,14 +75,14 @@ RE::BSEventNotifyControl HitEventHandler::ProcessEvent(const RE::TESHitEvent* ev
 
         if (faction && target->IsInFaction(faction)) {
             target->AddToFaction(faction, -1);
-            factionCooldowns[faction] = std::chrono::steady_clock::now();
+            factionCooldowns[faction] = RE::Calendar::GetSingleton()->GetHoursPassed();
         }
     } else if (aggressor && aggressor->IsPlayerRef() && target) {
         RE::TESFaction* faction = GetFactionByActor(target);
 
         if (faction && aggressor->IsInFaction(faction)) {
             aggressor->AddToFaction(faction, -1);
-            factionCooldowns[faction] = std::chrono::steady_clock::now();
+            factionCooldowns[faction] = RE::Calendar::GetSingleton()->GetHoursPassed();
         }
     }
 

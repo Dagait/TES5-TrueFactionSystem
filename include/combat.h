@@ -1,6 +1,7 @@
 #pragma once
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
+#include "RE/C/Calendar.h"
 
 using namespace RE;
 
