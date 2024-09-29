@@ -1,4 +1,4 @@
-#include "plugin.h"
+#include "main.h"
 #include "disguise.h"
 #include "faction.h"
 #include "combat.h"
@@ -12,7 +12,7 @@ using namespace RE;
 
 std::chrono::steady_clock::time_point lastCheckTime;
 
-constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(5);
+constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
 
 static EquipEventHandler g_equipEventHandler;
 static HitEventHandler g_hitEventHandler;
@@ -40,8 +40,8 @@ void StartBackgroundTask(Actor *player) {
                 auto elapsed = now - lastCheckTime;
 
                 if (elapsed >= CHECK_INTERVAL_SECONDS) {
-                    CheckNPCDetection(player);
                     UpdateDisguiseValue(player);
+                    CheckNPCDetection(player);   
                     CheckAndReAddPlayerToFaction(player);
                     lastCheckTime = now;
                 }

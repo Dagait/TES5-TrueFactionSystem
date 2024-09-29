@@ -18,12 +18,12 @@ find_package(CommonLibSSE CONFIG REQUIRED)
 
 # Add source files from the src directory
 set(SOURCES
-    src/plugin.cpp
+    src/main.cpp
     src/disguise.cpp
     src/faction.cpp
     src/combat.cpp
-    src/npcdetectiondata.cpp
-    src/disguisedata.cpp
+    src/disguise_data.cpp
+    src/armor_slots.cpp
 )
 include_directories(src)
 

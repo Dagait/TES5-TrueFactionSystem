@@ -1,8 +1,9 @@
 #include "disguise.h"
 #include "faction.h"
 #include "combat.h"
-#include "npcdetectiondata.h"
-#include "disguisedata.h"
+#include "npc_detection_data.h"
+#include "disguise_data.h"
+#include "armor_slots.h"
 
 #include <cmath>
 #include <random>
@@ -16,36 +17,7 @@
     #define M_PI 3.14159265358979323846
 #endif
 
-// Doesn't seem to take into account (Need to look into this one)
 constexpr float DETECTION_RADIUS = 300.0f;
-
-// MCM Menu values for later...
-constexpr float CHEST_WEIGHT = 30.0f;
-constexpr float HELMET_WEIGHT = 12.0f;
-constexpr float GLOVES_WEIGHT = 4.0f;
-constexpr float FOREARMS_WEIGHT = 8.0f;
-constexpr float SHOES_WEIGHT = 5.0f;
-constexpr float CIRCLET_WEIGHT = 1.0f;
-
-struct ArmorSlot {
-    RE::BGSBipedObjectForm::BipedObjectSlot slot;
-    float weight;
-};
-
-const std::vector<ArmorSlot> armorSlots = {{RE::BGSBipedObjectForm::BipedObjectSlot::kBody, CHEST_WEIGHT},
-                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kHands, GLOVES_WEIGHT},
-                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, FOREARMS_WEIGHT},
-                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet, CIRCLET_WEIGHT},
-                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kFeet, SHOES_WEIGHT},
-                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kHead, HELMET_WEIGHT}};
-
-const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots = {
-    RE::BGSBipedObjectForm::BipedObjectSlot::kHead,     RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
-    RE::BGSBipedObjectForm::BipedObjectSlot::kHands,    RE::BGSBipedObjectForm::BipedObjectSlot::kFeet,
-    RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet,
-    RE::BGSBipedObjectForm::BipedObjectSlot::kHair};
-
-
 
 // Global map to store NPCs, which have recognized the player (Disguised Value the player)
 std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
@@ -123,7 +95,8 @@ bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees
     }
 
     float npcRotationZ = npc->data.angle.z;
-    float npcRotationZInRadians = npcRotationZ * (M_PI / 180.0f);
+    float npcRotationZInRadians = npcRotationZ;
+    // This vector points into the wrong direction???
     RE::NiPoint3 npcForward(std::cos(npcRotationZInRadians), std::sin(npcRotationZInRadians), 0.0f);
 
     RE::NiPoint3 npcToPlayer = player->GetPosition() - npc->GetPosition();
@@ -156,6 +129,24 @@ bool IsPlayerInDarkArea(RE::Actor *player) {
     return false;
 }
 
+void CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
+    RE::FormID npcID = npc->GetFormID();
+    float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
+
+    if (recognizedNPCs.find(npcID) != recognizedNPCs.end()) {
+        NPCDetectionData &detectionData = recognizedNPCs[npcID];
+
+        float timeSinceLastDetected = currentInGameHours - detectionData.lastDetectedTime;
+
+        if (timeSinceLastDetected > TIME_TO_LOSE_DETECTION) {
+            recognizedNPCs.erase(npcID);
+            if (playerDisguiseStatus.GetDisguiseValue(faction) > 5.0f) {
+                player->AddToFaction(faction, 1);
+            }
+        }
+    }
+}
+
 bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
     float playerDisguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
     float distance = abs(npc->GetPosition().GetDistance(player->GetPosition()));
@@ -165,7 +156,7 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
 
     float recognitionProbability = (100.0f - playerDisguiseValue) / 100.0f;
 
-    float distanceFactor = 1.0f / std::pow((distance / DETECTION_RADIUS), 2.0f);
+    float distanceFactor = 1.0f / std::pow((distance / DETECTION_RADIUS), 1.2f);
     recognitionProbability *= distanceFactor;
 
     // Level check for NPCs vs player
@@ -196,13 +187,13 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
 
 
 
-    auto npcID = npc->GetFormID();
-    auto currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
+    RE::FormID npcID = npc->GetFormID();
+    float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
 
     if (recognizedNPCs.find(npcID) != recognizedNPCs.end()) {
         NPCDetectionData &detectionData = recognizedNPCs[npcID];
 
-        auto timeSinceLastDetected = currentInGameHours - detectionData.lastDetectedTime;
+        float timeSinceLastDetected = currentInGameHours - detectionData.lastDetectedTime;
 
         if (timeSinceLastDetected < TIME_TO_LOSE_DETECTION) {
             // If the NPC has detected the player before, increase the recognition probability
@@ -233,32 +224,34 @@ void CheckNPCDetection(RE::Actor *player) {
     }
 
     bool playerDetected = false;
-    auto currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
+    float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
     float detectionRadius = DETECTION_RADIUS;
 
     std::vector<std::future<bool>> detectionFutures;
 
     // Look for NPCs in the player's detection range
     currentCell->ForEachReferenceInRange(player->GetPosition(), detectionRadius, [&](RE::TESObjectREFR &ref) {
-        RE::Actor *npc = skyrim_cast<RE::Actor *>(&ref);
+        RE::Actor *npc = skyrim_cast<RE::Actor*>(&ref);
         /*
         * Check if the reference is an actor and not the player
          * The Player also needs to be in the NPC's line of sight and field of view
         */
         if (npc && npc != player) {
             detectionFutures.push_back(std::async(std::launch::async, [&, npc]() {
-                bool isInLineOfSight = IsInLineOfSight(npc, player);
-                bool isInFieldOfView = IsInFieldOfView(npc, player);
-
-                if (!isInLineOfSight && !isInFieldOfView) {
-                    return false;
-                }
-
                 // Iterate through factions to check disguise values
                 for (const auto &[factionName, faction] : GetRelevantFactions()) {
                     float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
 
                     if (disguiseValue > 0.0f && npc->IsInFaction(faction)) {
+                        CheckHoursPassed(npc, player, faction);
+
+                        bool isInLineOfSight = IsInLineOfSight(npc, player);
+                        bool isInFieldOfView = IsInFieldOfView(npc, player);
+
+                        if (!isInLineOfSight && !isInFieldOfView) {
+                            return false;
+                        }
+
                         float distance = std::abs(player->GetPosition().GetDistance(npc->GetPosition()));
 
                         // Calculate detection probability
@@ -269,7 +262,7 @@ void CheckNPCDetection(RE::Actor *player) {
                         if (NPCRecognizesPlayer(npc, player, faction)) {
                             StartCombat(npc, player, faction);
                             // NPC detected the player
-                            recognizedNPCs[npc->GetFormID()] = {1, currentInGameHours};
+                            recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
                             return true;  // NPC detected the player
                         }
                     }

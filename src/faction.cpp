@@ -142,6 +142,8 @@ std::string GetTagForFaction(RE::TESFaction *faction) {
     return "";
 }
 
+RE::TESFaction *GetFactionByFormID(RE::FormID *formID) { return nullptr; }
+
 std::vector<RE::TESFaction *> GetFactionsByArmorTags(RE::Actor *actor) {
     if (!actor) {
         return {};

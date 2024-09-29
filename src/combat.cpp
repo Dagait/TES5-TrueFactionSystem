@@ -1,13 +1,13 @@
 #include "combat.h"
 #include "faction.h"
-#include "disguisedata.h"
+#include "disguise_data.h"
 
-#include <chrono>
 #include <unordered_map>
 #include <thread>
 
 
 extern PlayerDisguiseStatus playerDisguiseStatus;
+
 constexpr float REJOIN_COOLDOWN = 2.0f;
 
 std::unordered_map<RE::TESFaction*, float> factionCooldowns;
