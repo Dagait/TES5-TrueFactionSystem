@@ -16,17 +16,17 @@ const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
     {"npeStormcloaksFaction", 0x00028849},
     {"npeWhiterunFaction", 0x000267EA},   
     {"npeWindhelmFaction", 0x000267E3},      
-    {"npeWinterholdFaction", 0x00014217},
-    {"npeThalmorFaction", 0x00039F26}};
+    {"npeWinterholdFaction", 0x00014217},  
+    {"npeThalmorFaction", 0x00039F26},  
+    {"npeSilverHandFaction", 0x000AA0A4}};
 
 static std::unordered_map<RE::FormID, std::string> factionFormIDToTagMap = {
-    {0x0001BCC0, "npeBanditFaction"},     {0x0002BF9A, "npeImperialFaction"},    {0x00072834, "npeBladesFaction"},
-    {0x00048362, "npeCompanionsFaction"},   {0x0002816E, "npeDawnstarFaction"},
-    {0x00028170, "npeFalkreathFaction"},  {0x00043599, "npeForswornFaction"},    {0x0002816C, "npeMarkarthFaction"},
-    {0x0002816D, "npeMorthalFaction"},    {0x000DEED6, "npeNightingaleFaction"}, {0x0002816B, "npeRiftenFaction"},
-    {0x00029DB0, "npeSolitudeFaction"},   {0x00028849, "npeStormcloaksFaction"},
-    {0x000267EA, "npeWhiterunFaction"},   {0x000267E3, "npeWindhelmFaction"},    {0x00014217, "npeWinterholdFaction"},
-    {0x00039F26, "npeThalmorFaction"}};
+    {0x0001BCC0, "npeBanditFaction"},      {0x0002BF9A, "npeImperialFaction"}, {0x00072834, "npeBladesFaction"},
+    {0x00048362, "npeCompanionsFaction"},  {0x0002816E, "npeDawnstarFaction"}, {0x00028170, "npeFalkreathFaction"},
+    {0x00043599, "npeForswornFaction"},    {0x0002816C, "npeMarkarthFaction"}, {0x0002816D, "npeMorthalFaction"},
+    {0x000DEED6, "npeNightingaleFaction"}, {0x0002816B, "npeRiftenFaction"},   {0x00029DB0, "npeSolitudeFaction"},
+    {0x00028849, "npeStormcloaksFaction"}, {0x000267EA, "npeWhiterunFaction"}, {0x000267E3, "npeWindhelmFaction"},
+    {0x00014217, "npeWinterholdFaction"},  {0x00039F26, "npeThalmorFaction"},  {0x000AA0A4, "npeSilverHandFaction"}};
 
 const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots = {
     RE::BGSBipedObjectForm::BipedObjectSlot::kHead,     RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
@@ -120,6 +120,11 @@ std::vector<std::pair<std::string, RE::TESFaction *>> GetRelevantFactions() {
     RE::TESFaction *thalmorFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x00039F26);
     if (thalmorFaction) {
         factions.push_back({"ThalmorFaction", thalmorFaction});
+    }
+
+    RE::TESFaction *silverHandFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x000AA0A4);
+    if (silverHandFaction) {
+        factions.push_back({"SilverHandFaction", thalmorFaction});
     }
 
     return factions;
