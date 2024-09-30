@@ -105,8 +105,9 @@ $$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 ## Installation Instructions
 
 1. **SKSE64** (Skyrim Script Extender) must be installed.
-2. Copy all the files  into your `Skyrim Special Edition/Data/` folder.
-3. Start the game and test the plugin by wearing faction armors and approaching the corresponding faction NPCs.
+2. SkyUI must also be installed, because of the new implemented MCM.
+3. Copy all the files  into your `Skyrim Special Edition/Data/` folder.
+4. Start the game and test the plugin by wearing faction armors and approaching the corresponding faction NPCs.
 
 ## Usage Instructions
 
@@ -140,3 +141,15 @@ $$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 - **Faction change delay**: There may be a slight delay before the player's faction affiliation is updated, as the check occurs at intervals.
 - **Detection logic**: Currently, the detection probability is primarily based on stealth value and distance. Additional factors are not yet implemented.
 - **Compatibility with other mods**: The plugin may conflict with mods that alter factions or armor keywords. Comprehensive mod compatibility is planned.
+
+# New Native Functions
+```
+; Dynamically add a keyword to your armor at runtime
+Bool Function AddKeywordToArmor(Armor akArmor, Keyword akKeyword) global Native
+
+; Get keyword by editor ID to be more dynamic
+Keyword Function GetKeywordByEditorID(string akKeywordName) global Native
+
+; Get all factions an actor is in
+Faction[] Function GetFactionsForActor(Actor akActor) global Native
+```
