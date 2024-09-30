@@ -132,10 +132,14 @@ bool IsNightTime();
  */
 bool IsPlayerInDarkArea(Actor* player);
 
-// Faction management
 /**
  * @brief Remove the player from all relevant factions.
  *
  * @param player The player actor.
  */
 void RemovePlayerFromAllFactions(Actor* player);
+
+/**
+ * 
+ */
+float GetDisguiseValueForFaction(RE::BSFixedString factionName);

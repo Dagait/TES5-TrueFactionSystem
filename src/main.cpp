@@ -54,13 +54,20 @@ RE::BGSKeyword *PapyrusGetKeywordByEditorID(RE::StaticFunctionTag *, RE::BSFixed
     return GetKeywordByEditorID(keyword);
 }
 
-std::vector<RE::TESFaction *> PapyrusGetFactionsForActor(RE::Actor *actor) { return GetFactionsForActor(actor); }
+std::vector<RE::TESFaction *> PapyrusGetFactionsForActor(RE::StaticFunctionTag *, RE::Actor *actor) {
+    return GetFactionsForActor(actor);
+}
+
+float PapyrusGetDisguiseValueForFaction(RE::StaticFunctionTag *, RE::BSFixedString factionName) {
+    return GetDisguiseValueForFaction(factionName);
+}
 
 // Function to bind the Papyrus function
 bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
     vm->RegisterFunction("AddKeywordToArmor", "npeTFS_MCM", PapyrusAddKeywordToArmor);
     vm->RegisterFunction("GetKeywordByEditorID", "npeTFS_MCM", PapyrusGetKeywordByEditorID);
     vm->RegisterFunction("GetFactionsForActor", "npeTFS_MCM", PapyrusGetFactionsForActor);
+    vm->RegisterFunction("GetDisguiseValueForFaction", "npeTFS_MCM", PapyrusGetDisguiseValueForFaction);
     return true;
 }
 

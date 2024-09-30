@@ -1,4 +1,5 @@
 #include "faction.h"
+#include "disguise_data.h"
 
 const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
     {"npeBanditFaction", 0x0001BCC0},
@@ -194,6 +195,7 @@ RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
     return nullptr;
 }
 
+
 std::vector<RE::TESFaction *> GetFactionsForActor(RE::Actor *actor) {
     std::vector<RE::TESFaction *> factions;
 
@@ -209,10 +211,31 @@ std::vector<RE::TESFaction *> GetFactionsForActor(RE::Actor *actor) {
     const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
 
     for (RE::TESFaction *faction : allFactions) {
-        if (faction && actor->IsInFaction(faction)) {
+        if (faction && actor->IsInFaction(faction) && strcmp(faction->GetName(), "") != 0) {
             factions.push_back(faction);
         }
     }
 
     return factions;
+}
+
+RE::TESFaction* GetFactionByFactionEditorID(RE::BSFixedString factionName) {
+    if (factionName.empty()) {
+        return nullptr;
+    }
+
+    auto dataHandler = RE::TESDataHandler::GetSingleton();
+    if (!dataHandler) {
+        return nullptr;
+    }
+
+    const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
+
+    for (RE::TESFaction *faction : allFactions) {
+        if (faction && strcmp(factionName.c_str(), faction->GetFormEditorID()) == 0) {
+            return faction;
+        }
+    }
+
+    return nullptr;
 }

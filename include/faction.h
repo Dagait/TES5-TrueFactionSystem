@@ -7,6 +7,7 @@
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
 
+
 using namespace RE;
 
 // Faction utility functions
@@ -46,3 +47,9 @@ std::vector<TESFaction*> GetFactionsByArmorTags(Actor* actor);
  * 
  */
 std::vector<RE::TESFaction*> GetFactionsForActor(RE::Actor* actor);
+
+
+/**
+ *
+ */
+RE::TESFaction* GetFactionByFactionEditorID(RE::BSFixedString factionName);

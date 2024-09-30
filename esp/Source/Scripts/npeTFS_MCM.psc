@@ -4,6 +4,7 @@ Scriptname npeTFS_MCM extends SKI_ConfigBase
 Bool Function AddKeywordToArmor(Armor akArmor, Keyword akKeyword) global Native
 Keyword Function GetKeywordByEditorID(string akKeywordName) global Native
 Faction[] Function GetFactionsForActor(Actor akActor) global Native
+float Function GetDisguiseValueForFaction(string akFactionName) global Native
 
 ; -------- PRIVATE VARS --------
 Armor[] wornArmors
@@ -192,7 +193,7 @@ Function ArmorKeywordPage()
 endFunction
 
 Function PlayerInformationPage()
-    AddHeaderOption("Player Factions")
+    AddHeaderOption("Player Factions | Disguise Values")
 
     ; Get the player actor
     Actor player = Game.GetPlayer()
@@ -204,16 +205,14 @@ Function PlayerInformationPage()
         int index = 0
         while index < playerFactions.Length
             Faction currentFaction = playerFactions[index]
-
+            float disguiseValue = GetDisguiseValueForFaction(currentFaction.GetName())
             ; Display the faction name and ID
-            AddTextOption("Faction: " + currentFaction.GetName(), currentFaction.GetFormID())
+            AddTextOption("Faction: " + currentFaction.GetName(), disguiseValue)
             index += 1
         endWhile
     else
         AddTextOption("No Factions Found", 0)
     endif
-    AddEmptyOption()
-    AddHeaderOption("Current Diguise Values")
 endFunction
 
 ; This event handles resetting and updating the page

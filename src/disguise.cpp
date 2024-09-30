@@ -25,6 +25,11 @@ constexpr float TIME_TO_LOSE_DETECTION = 2.0f;  // 2 hours
 
 PlayerDisguiseStatus playerDisguiseStatus;
 
+float GetDisguiseValueForFaction(RE::BSFixedString factionName) { 
+    RE::TESFaction *faction = GetFactionByFactionEditorID(factionName);
+    return playerDisguiseStatus.GetDisguiseValue(faction); 
+}
+
 bool IsFaceCovered(Actor *actor) {
     constexpr const char *COVERED_FACE_TAG = "npeCoveredFace";
 
@@ -322,7 +327,7 @@ void UpdateDisguiseValue(Actor *actor) {
 
         float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
 
-        if (!actor->IsInFaction(faction)) {
+        if (!actor->IsInFaction(faction) && disguiseValue > 5.0f) {
             actor->AddToFaction(faction, 1);
         } else {
             if (disguiseValue <= 5.0f) {
