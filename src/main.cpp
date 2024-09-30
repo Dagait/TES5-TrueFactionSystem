@@ -1,16 +1,11 @@
 #include "main.h"
-#include "disguise.h"
-#include "faction.h"
-#include "combat.h"
 
-#include "SKSE/Trampoline.h"
-#include <thread>
-#include <chrono>
 
 using namespace SKSE;
 using namespace RE;
 
 std::chrono::steady_clock::time_point lastCheckTime;
+std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
 
 constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
 
@@ -51,12 +46,44 @@ void StartBackgroundTask(Actor *player) {
     }).detach();
 }
 
+bool PapyrusAddKeywordToArmor(RE::StaticFunctionTag *, RE::TESObjectARMO *armor, RE::BGSKeyword *keyword) {
+    return AddKeywordToArmor(armor, keyword);
+}
 
-SKSEPluginLoad(const LoadInterface *skse) {
+RE::BGSKeyword *PapyrusGetKeywordByEditorID(RE::StaticFunctionTag *, RE::BSFixedString keyword) {
+    return GetKeywordByEditorID(keyword);
+}
+
+std::vector<RE::TESFaction *> PapyrusGetFactionsForActor(RE::Actor *actor) { return GetFactionsForActor(actor); }
+
+// Function to bind the Papyrus function
+bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
+    vm->RegisterFunction("AddKeywordToArmor", "npeTFS_MCM", PapyrusAddKeywordToArmor);
+    vm->RegisterFunction("GetKeywordByEditorID", "npeTFS_MCM", PapyrusGetKeywordByEditorID);
+    vm->RegisterFunction("GetFactionsForActor", "npeTFS_MCM", PapyrusGetFactionsForActor);
+    return true;
+}
+
+void SaveCallback(SKSE::SerializationInterface *a_intfc) {
+    // SaveDetectionData(a_intfc);
+    SaveArmorKeywordDataCallback(a_intfc);
+}
+
+void LoadCallback(SKSE::SerializationInterface *a_intfc) {
+    // LoadDetectionData(a_intfc);
+    LoadArmorKeywordDataCallback(a_intfc);
+}
+
+
+
+
+extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKSE::LoadInterface *skse) {
     SKSE::Init(skse);
 
-    SKSE::GetMessagingInterface()->RegisterListener([](MessagingInterface::Message *message) {
-        if (message->type == MessagingInterface::kDataLoaded) {
+    SKSE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);
+
+    SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
+        if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             RE::ConsoleLog::GetSingleton()->Print("Loading in TFS...");
 
             auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
@@ -76,14 +103,11 @@ SKSEPluginLoad(const LoadInterface *skse) {
                 lastCheckTime = std::chrono::steady_clock::now();
                 StartBackgroundTask(player);
             }
+
+            SKSE::GetSerializationInterface()->SetSaveCallback(SaveCallback);
+            SKSE::GetSerializationInterface()->SetLoadCallback(LoadCallback);
         }
     });
-
-    SKSE::GetSerializationInterface()->SetSaveCallback(
-        [](SKSE::SerializationInterface *a_intfc) { SaveDetectionData(a_intfc); });
-
-    SKSE::GetSerializationInterface()->SetLoadCallback(
-        [](SKSE::SerializationInterface *a_intfc) { LoadDetectionData(a_intfc); });
 
     return true;
 }

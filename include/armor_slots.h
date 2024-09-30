@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 
+#include "log.h"
 #include "RE/B/BGSBipedObjectForm.h"
 
 /**
@@ -38,3 +39,13 @@ extern const std::vector<ArmorSlot> armorSlots;
  * This vector includes all armor slots that can be used to determine what armor pieces are worn by the player or NPCs.
  */
 extern const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots;
+
+/**
+*
+*/
+bool AddKeywordToArmor(RE::TESObjectARMO* armor, RE::BGSKeyword* keyword);
+
+/**
+ *
+ */
+RE::BGSKeyword* GetKeywordByEditorID(RE::BSFixedString keyword);

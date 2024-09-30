@@ -147,7 +147,9 @@ std::vector<RE::TESFaction *> GetFactionsByArmorTags(RE::Actor *actor) {
         return {};
     }
 
-    std::set<RE::TESFaction *> factionsSet;  // Verwende ein Set, um Duplikate zu vermeiden
+    std::set<RE::TESFaction *> factionsSet;
+    // Get all Keywords starting with *npe*
+
 
     for (auto slot : allArmorSlots) {
         RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot);
@@ -190,4 +192,27 @@ RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
     }
 
     return nullptr;
+}
+
+std::vector<RE::TESFaction *> GetFactionsForActor(RE::Actor *actor) {
+    std::vector<RE::TESFaction *> factions;
+
+    if (!actor) {
+        return factions;
+    }
+
+    auto dataHandler = RE::TESDataHandler::GetSingleton();
+    if (!dataHandler) {
+        return factions;
+    }
+
+    const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
+
+    for (RE::TESFaction *faction : allFactions) {
+        if (faction && actor->IsInFaction(faction)) {
+            factions.push_back(faction);
+        }
+    }
+
+    return factions;
 }

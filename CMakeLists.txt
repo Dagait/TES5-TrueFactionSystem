@@ -24,6 +24,8 @@ set(SOURCES
     src/combat.cpp
     src/disguise_data.cpp
     src/armor_slots.cpp
+    src/log.cpp
+    src/armor_keyword_data.cpp
 )
 include_directories(src)
 

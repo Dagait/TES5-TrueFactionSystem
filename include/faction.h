@@ -40,3 +40,9 @@ std::string GetTagForFaction(TESFaction* faction);
  * @return std::vector<TESFaction*> A list of factions based on the actor's worn armor.
  */
 std::vector<TESFaction*> GetFactionsByArmorTags(Actor* actor);
+
+
+/**
+ * 
+ */
+std::vector<RE::TESFaction*> GetFactionsForActor(RE::Actor* actor);

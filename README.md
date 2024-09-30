@@ -33,6 +33,7 @@ The **True Faction System** is an SKSE plugin for Skyrim Special Edition that al
 | Windhelm Faction    | npeWindhelmFaction       | <ul><li>[x] </li></ul> | |
 | Winterhold Faction  | npeWinterholdFaction     | <ul><li>[x] </li></ul> | |
 | Thalmor Faction     | npeThalmorFaction        | <ul><li>[x] </li></ul> | |
+| Silverhand Faction     | npeSilverHandFaction        | <ul><li>[x] </li></ul> | |
 
 Table 1: Currently implemented factions and their corresponding armor tags
 
