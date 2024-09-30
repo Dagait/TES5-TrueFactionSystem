@@ -6,6 +6,11 @@
 
 The **True Faction System** is an SKSE plugin for Skyrim Special Edition that allows the player to act as a member of various factions depending on the armor worn. The plugin uses dynamic faction recognition based on faction armors and adjusts NPC behavior accordingly.
 
+If you just want to do a quick test, there's a test cell where each room has its own faction NPCs. At the start, you'll find a barrel with important items for the test.
+```
+coc npeTFSTestCell
+```
+
 ## Features
 
 - **Dynamic Faction Affiliation**: When the player wears armor associated with a specific faction (e.g., Bandits, Imperials, Stormcloaks), they are recognized as an ally by NPCs of that faction and are not attacked.
