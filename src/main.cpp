@@ -5,9 +5,12 @@ using namespace SKSE;
 using namespace RE;
 
 std::chrono::steady_clock::time_point lastCheckTime;
+std::chrono::steady_clock::time_point lastCheckDetectionTime;
+
 std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
 
 constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
+constexpr std::chrono::seconds DETECTION_INTERVAL_SECONDS(18);
 
 static EquipEventHandler g_equipEventHandler;
 static HitEventHandler g_hitEventHandler;
@@ -33,12 +36,16 @@ void StartBackgroundTask(Actor *player) {
             if (player && player->IsPlayerRef()) {
                 auto now = std::chrono::steady_clock::now();
                 auto elapsed = now - lastCheckTime;
+                auto elapsedDetection = now - lastCheckDetectionTime;
 
                 if (elapsed >= CHECK_INTERVAL_SECONDS) {
                     UpdateDisguiseValue(player);
-                    CheckNPCDetection(player);   
                     CheckAndReAddPlayerToFaction(player);
                     lastCheckTime = now;
+                }
+                if (elapsedDetection >= DETECTION_INTERVAL_SECONDS) {
+                    CheckNPCDetection(player);
+                    lastCheckDetectionTime = now;
                 }
             }
             std::this_thread::sleep_for(CHECK_INTERVAL_SECONDS);
@@ -124,6 +131,7 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
             Actor *player = PlayerCharacter::GetSingleton();
             if (player) {
                 lastCheckTime = std::chrono::steady_clock::now();
+                lastCheckDetectionTime = std::chrono::steady_clock::now();
                 StartBackgroundTask(player);
             }
 
