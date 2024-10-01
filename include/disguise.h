@@ -1,4 +1,16 @@
 #pragma once
+#include "faction.h"
+#include "combat.h"
+#include "npc_detection_data.h"
+#include "disguise_data.h"
+#include "armor_slots.h"
+
+#include <cmath>
+#include <random>
+#include <unordered_map>
+#include <future>
+#include <vector>
+#include <thread>
 
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
@@ -73,16 +85,6 @@ void SaveDetectionData(SKSE::SerializationInterface* a_intfc);
  */
 void LoadDetectionData(SKSE::SerializationInterface* a_intfc);
 
-// Player disguise utility functions
-/**
- * @brief Check if the player's face is covered by their equipment.
- *
- * @param actor The actor (usually the player).
- * @return true If the face is covered.
- * @return false If the face is not covered.
- */
-bool IsFaceCovered(Actor* actor);
-
 // Field of view and line of sight functions
 /**
  * @brief Check if the player is within the NPC's field of view.
@@ -132,10 +134,14 @@ bool IsNightTime();
  */
 bool IsPlayerInDarkArea(Actor* player);
 
-// Faction management
 /**
  * @brief Remove the player from all relevant factions.
  *
  * @param player The player actor.
  */
 void RemovePlayerFromAllFactions(Actor* player);
+
+/**
+ * 
+ */
+float GetDisguiseValueForFaction(RE::TESFaction* faction);

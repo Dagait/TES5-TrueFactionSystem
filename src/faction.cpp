@@ -16,17 +16,17 @@ const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
     {"npeStormcloaksFaction", 0x00028849},
     {"npeWhiterunFaction", 0x000267EA},   
     {"npeWindhelmFaction", 0x000267E3},      
-    {"npeWinterholdFaction", 0x00014217},
-    {"npeThalmorFaction", 0x00039F26}};
+    {"npeWinterholdFaction", 0x00014217},  
+    {"npeThalmorFaction", 0x00039F26},  
+    {"npeSilverHandFaction", 0x000AA0A4}};
 
 static std::unordered_map<RE::FormID, std::string> factionFormIDToTagMap = {
-    {0x0001BCC0, "npeBanditFaction"},     {0x0002BF9A, "npeImperialFaction"},    {0x00072834, "npeBladesFaction"},
-    {0x00048362, "npeCompanionsFaction"},   {0x0002816E, "npeDawnstarFaction"},
-    {0x00028170, "npeFalkreathFaction"},  {0x00043599, "npeForswornFaction"},    {0x0002816C, "npeMarkarthFaction"},
-    {0x0002816D, "npeMorthalFaction"},    {0x000DEED6, "npeNightingaleFaction"}, {0x0002816B, "npeRiftenFaction"},
-    {0x00029DB0, "npeSolitudeFaction"},   {0x00028849, "npeStormcloaksFaction"},
-    {0x000267EA, "npeWhiterunFaction"},   {0x000267E3, "npeWindhelmFaction"},    {0x00014217, "npeWinterholdFaction"},
-    {0x00039F26, "npeThalmorFaction"}};
+    {0x0001BCC0, "npeBanditFaction"},      {0x0002BF9A, "npeImperialFaction"}, {0x00072834, "npeBladesFaction"},
+    {0x00048362, "npeCompanionsFaction"},  {0x0002816E, "npeDawnstarFaction"}, {0x00028170, "npeFalkreathFaction"},
+    {0x00043599, "npeForswornFaction"},    {0x0002816C, "npeMarkarthFaction"}, {0x0002816D, "npeMorthalFaction"},
+    {0x000DEED6, "npeNightingaleFaction"}, {0x0002816B, "npeRiftenFaction"},   {0x00029DB0, "npeSolitudeFaction"},
+    {0x00028849, "npeStormcloaksFaction"}, {0x000267EA, "npeWhiterunFaction"}, {0x000267E3, "npeWindhelmFaction"},
+    {0x00014217, "npeWinterholdFaction"},  {0x00039F26, "npeThalmorFaction"},  {0x000AA0A4, "npeSilverHandFaction"}};
 
 const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots = {
     RE::BGSBipedObjectForm::BipedObjectSlot::kHead,     RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
@@ -122,6 +122,11 @@ std::vector<std::pair<std::string, RE::TESFaction *>> GetRelevantFactions() {
         factions.push_back({"ThalmorFaction", thalmorFaction});
     }
 
+    RE::TESFaction *silverHandFaction = RE::TESForm::LookupByID<RE::TESFaction>(0x000AA0A4);
+    if (silverHandFaction) {
+        factions.push_back({"SilverHandFaction", thalmorFaction});
+    }
+
     return factions;
 }
 
@@ -142,7 +147,9 @@ std::vector<RE::TESFaction *> GetFactionsByArmorTags(RE::Actor *actor) {
         return {};
     }
 
-    std::set<RE::TESFaction *> factionsSet;  // Verwende ein Set, um Duplikate zu vermeiden
+    std::set<RE::TESFaction *> factionsSet;
+    // Get all Keywords starting with *npe*
+
 
     for (auto slot : allArmorSlots) {
         RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot);
@@ -166,14 +173,7 @@ RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
         return nullptr;
     }
 
-    std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> armorSlots = {
-        RE::BGSBipedObjectForm::BipedObjectSlot::kHead, RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
-        RE::BGSBipedObjectForm::BipedObjectSlot::kHands, RE::BGSBipedObjectForm::BipedObjectSlot::kFeet,
-        RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet,
-        RE::BGSBipedObjectForm::BipedObjectSlot::kHair
-    };
-
-    for (auto &slot : armorSlots) {
+    for (auto &slot : allArmorSlots) {
         RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot);
         if (wornArmor) {
             for (const auto &[tag, factionID] : factionArmorTags) {
@@ -181,6 +181,72 @@ RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
                     return RE::TESForm::LookupByID<RE::TESFaction>(factionID);
                 }
             }
+        }
+    }
+
+    return nullptr;
+}
+
+
+std::vector<RE::TESFaction *> GetFactionsForActor(RE::Actor *actor) {
+    std::vector<RE::TESFaction *> factions;
+
+    if (!actor) {
+        return factions;
+    }
+
+    auto dataHandler = RE::TESDataHandler::GetSingleton();
+    if (!dataHandler) {
+        return factions;
+    }
+
+    const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
+
+    for (RE::TESFaction *faction : allFactions) {
+        if (faction && actor->IsInFaction(faction)) {
+            factions.push_back(faction);
+        }
+    }
+
+    return factions;
+}
+
+RE::BSFixedString GetFactionEditorID(RE::TESFaction *faction) {
+    if (faction) {
+        const char *editorID = faction->GetFormEditorID();
+
+        // Check if editorID is valid
+        if (editorID && strlen(editorID) > 0) {
+            return RE::BSFixedString(editorID);
+        } else {
+            // Fallback: return the faction's form ID in hexadecimal as a string
+            char formIDBuffer[10];  // enough space for "0x" + 8 hex digits + null terminator
+            snprintf(formIDBuffer, sizeof(formIDBuffer), "0x%08X", faction->GetFormID());
+            auto factionName = factionFormIDToTagMap.find(faction->GetFormID());
+            if (factionName != factionFormIDToTagMap.end()) {
+                return RE::BSFixedString(factionName->second.c_str());
+            }
+            return RE::BSFixedString(formIDBuffer);
+        }
+    }
+    return RE::BSFixedString("No FactionID found!");
+}
+
+RE::TESFaction *GetFactionByEditorID(RE::BSFixedString factionEditorID) {
+    if (factionEditorID.empty()) {
+        return nullptr;
+    }
+
+    auto dataHandler = RE::TESDataHandler::GetSingleton();
+    if (!dataHandler) {
+        return nullptr;
+    }
+
+    const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
+
+    for (RE::TESFaction *faction : allFactions) {
+        if (faction && strcmp(factionEditorID.c_str(), faction->GetFormEditorID()) == 0) {
+            return faction;
         }
     }
 

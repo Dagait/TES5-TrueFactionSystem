@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 
+#include "faction.h"
+#include "log.h"
 #include "RE/B/BGSBipedObjectForm.h"
 
 /**
@@ -25,16 +27,19 @@ struct ArmorSlot {
     float weight;                                  /// The disguise weight value for the slot.
 };
 
-/**
- * @brief Vector containing all relevant armor slots and their corresponding weights.
- *
- * This vector is used to iterate over armor slots and apply the respective disguise weights.
- */
-extern const std::vector<ArmorSlot> armorSlots;
+extern const std::vector<ArmorSlot> armorSlotsSlot;
 
 /**
- * @brief Vector containing all armor slot types.
+*
+*/
+bool AddKeywordToArmor(RE::TESObjectARMO* armor, RE::BGSKeyword* keyword);
+
+/**
  *
- * This vector includes all armor slots that can be used to determine what armor pieces are worn by the player or NPCs.
  */
-extern const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots;
+bool RemoveKeywordFromArmor(RE::TESObjectARMO* armor, RE::BGSKeyword* keyword);
+
+/**
+ *
+ */
+RE::BGSKeyword* GetKeywordByEditorID(RE::BSFixedString keyword);

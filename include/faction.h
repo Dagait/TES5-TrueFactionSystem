@@ -1,4 +1,5 @@
 #pragma once
+#include "disguise_data.h"
 
 #include <string>
 #include <unordered_map>
@@ -7,7 +8,11 @@
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
 
+
 using namespace RE;
+
+extern const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags;
+extern const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots;
 
 // Faction utility functions
 /**
@@ -40,3 +45,21 @@ std::string GetTagForFaction(TESFaction* faction);
  * @return std::vector<TESFaction*> A list of factions based on the actor's worn armor.
  */
 std::vector<TESFaction*> GetFactionsByArmorTags(Actor* actor);
+
+
+/**
+ * 
+ */
+std::vector<RE::TESFaction*> GetFactionsForActor(RE::Actor* actor);
+
+
+/**
+ *
+ */
+RE::TESFaction* GetFactionByEditorID(RE::BSFixedString factionEditorID);
+
+
+/**
+ *
+ */
+RE::BSFixedString GetFactionEditorID(RE::TESFaction* faction);

@@ -1,16 +1,4 @@
 #include "disguise.h"
-#include "faction.h"
-#include "combat.h"
-#include "npc_detection_data.h"
-#include "disguise_data.h"
-#include "armor_slots.h"
-
-#include <cmath>
-#include <random>
-#include <unordered_map>
-#include <future>
-#include <vector>
-#include <thread>
 
 
 #ifndef M_PI
@@ -25,19 +13,12 @@ constexpr float TIME_TO_LOSE_DETECTION = 2.0f;  // 2 hours
 
 PlayerDisguiseStatus playerDisguiseStatus;
 
-bool IsFaceCovered(Actor *actor) {
+float GetDisguiseValueForFaction(RE::TESFaction *faction) { return playerDisguiseStatus.GetDisguiseValue(faction); }
+
+bool IsFaceCovered(RE::TESObjectARMO *armor) {
     constexpr const char *COVERED_FACE_TAG = "npeCoveredFace";
-
-    for (auto slot : allArmorSlots) {
-        RE::TESObjectARMO *armor = actor->GetWornArmor(slot);
-        if (armor && armor->HasKeywordString(COVERED_FACE_TAG)) {
-            return true;
-        }
-    }
-
-    return false;
+    return armor->HasKeywordString(COVERED_FACE_TAG);
 }
-
 
 void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
     float disguiseValue = 0.0f;
@@ -48,10 +29,10 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
         return;
     }
 
-    for (const auto &slot : armorSlots) {
+    for (const auto &slot : armorSlotsSlot) {
         RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
         if (armor) {
-            if (armor->HasKeywordString(COVERED_FACE_TAG)) {
+            if (IsFaceCovered(armor)) {
                 playerDisguiseStatus.SetDisguiseValue(faction, 100);
                 return;
             }
@@ -67,9 +48,7 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
     playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
 }
 
-float GetDetectionProbability(float disguiseValue) {
-    return abs(100.0f - disguiseValue);
-}
+float GetDetectionProbability(float disguiseValue) { return abs(100.0f - disguiseValue); }
 
 float AdjustProbabilityByDistance(float detectionProbability, float distance, float maxDistance) {
     float distanceFactor = 1.0f - (distance / maxDistance);  // Scaled by 1 (near) to 0 (far)
@@ -195,8 +174,6 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
         recognitionProbability *= 0.2f;
     }
 
-
-
     RE::FormID npcID = npc->GetFormID();
     float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
 
@@ -225,7 +202,7 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
 /**
  * Check if NPCs detect the player based the player's disguise value
  * @param **player** The player actor
-*/
+ */
 void CheckNPCDetection(RE::Actor *player) {
     RE::TESObjectCELL *currentCell = player->GetParentCell();
     if (!currentCell) {
@@ -241,11 +218,11 @@ void CheckNPCDetection(RE::Actor *player) {
 
     // Look for NPCs in the player's detection range
     currentCell->ForEachReferenceInRange(player->GetPosition(), detectionRadius, [&](RE::TESObjectREFR &ref) {
-        RE::Actor *npc = skyrim_cast<RE::Actor*>(&ref);
+        RE::Actor *npc = skyrim_cast<RE::Actor *>(&ref);
         /*
-        * Check if the reference is an actor and not the player
+         * Check if the reference is an actor and not the player
          * The Player also needs to be in the NPC's line of sight and field of view
-        */
+         */
         if (npc && npc != player) {
             detectionFutures.push_back(std::async(std::launch::async, [&, npc]() {
                 // Iterate through factions to check disguise values
@@ -322,7 +299,7 @@ void UpdateDisguiseValue(Actor *actor) {
 
         float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
 
-        if (!actor->IsInFaction(faction)) {
+        if (!actor->IsInFaction(faction) && disguiseValue > 5.0f) {
             actor->AddToFaction(faction, 1);
         } else {
             if (disguiseValue <= 5.0f) {
@@ -334,7 +311,6 @@ void UpdateDisguiseValue(Actor *actor) {
 
     CheckNPCDetection(actor);
 }
-
 
 void SaveDetectionData(SKSE::SerializationInterface *a_intfc) {
     for (auto &[npcID, detectionData] : recognizedNPCs) {
