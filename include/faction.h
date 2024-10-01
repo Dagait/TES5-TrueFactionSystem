@@ -52,4 +52,10 @@ std::vector<RE::TESFaction*> GetFactionsForActor(RE::Actor* actor);
 /**
  *
  */
-RE::TESFaction* GetFactionByFactionEditorID(RE::BSFixedString factionName);
+RE::TESFaction* GetFactionByEditorID(RE::BSFixedString factionName);
+
+
+/**
+ *
+ */
+RE::BSFixedString GetFactionEditorID(RE::TESFaction* faction);

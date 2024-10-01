@@ -219,7 +219,17 @@ std::vector<RE::TESFaction *> GetFactionsForActor(RE::Actor *actor) {
     return factions;
 }
 
-RE::TESFaction* GetFactionByFactionEditorID(RE::BSFixedString factionName) {
+RE::BSFixedString GetFactionEditorID(RE::TESFaction *faction) {
+    if (faction) {
+        const char *editorID = faction->GetFormEditorID();
+        if (editorID) {
+            return RE::BSFixedString(editorID);
+        }
+    }
+    return RE::BSFixedString("");
+}
+
+RE::TESFaction *GetFactionByEditorID(RE::BSFixedString factionName) {
     if (factionName.empty()) {
         return nullptr;
     }

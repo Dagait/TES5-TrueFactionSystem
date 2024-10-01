@@ -26,7 +26,7 @@ constexpr float TIME_TO_LOSE_DETECTION = 2.0f;  // 2 hours
 PlayerDisguiseStatus playerDisguiseStatus;
 
 float GetDisguiseValueForFaction(RE::BSFixedString factionName) { 
-    RE::TESFaction *faction = GetFactionByFactionEditorID(factionName);
+    RE::TESFaction *faction = GetFactionByEditorID(factionName);
     return playerDisguiseStatus.GetDisguiseValue(faction); 
 }
 

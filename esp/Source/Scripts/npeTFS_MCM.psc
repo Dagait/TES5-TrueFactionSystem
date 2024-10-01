@@ -5,6 +5,7 @@ Bool Function AddKeywordToArmor(Armor akArmor, Keyword akKeyword) global Native
 Keyword Function GetKeywordByEditorID(string akKeywordName) global Native
 Faction[] Function GetFactionsForActor(Actor akActor) global Native
 float Function GetDisguiseValueForFaction(string akFactionName) global Native
+string Function GetFactionEditorID(Faction akFaction) global Native
 
 ; -------- PRIVATE VARS --------
 Armor[] wornArmors
@@ -205,7 +206,8 @@ Function PlayerInformationPage()
         int index = 0
         while index < playerFactions.Length
             Faction currentFaction = playerFactions[index]
-            float disguiseValue = GetDisguiseValueForFaction(currentFaction.GetName())
+            string factionEditorID = GetFactionEditorID(currentFaction)
+            float disguiseValue = GetDisguiseValueForFaction(factionEditorID)
             ; Display the faction name and ID
             AddTextOption("Faction: " + currentFaction.GetName(), disguiseValue)
             index += 1
