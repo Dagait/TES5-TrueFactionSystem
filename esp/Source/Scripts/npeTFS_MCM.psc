@@ -212,9 +212,10 @@ Function PlayerInformationPage()
 
             string factionEditorID = GetFactionEditorID(currentFaction)
             float disguiseValue = GetDisguiseValueForFaction(currentFaction)
+            float disguiseBonusValue = GetDisguiseBonusValueForFaction(currentFaction)
             ; Display the faction name (via Faction ID, because most factions does not have a name) and disguise value
             ; Factions EditorID is an empty string??
-            AddTextOption("Faction: " + factionEditorID, disguiseValue)
+            AddTextOption("Faction: " + factionEditorID, Math.Floor(disguiseValue) + " (+" + Math.Floor(disguiseBonusValue) + ")")
             index += 1
         endWhile
     else
