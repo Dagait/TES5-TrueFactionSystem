@@ -1,9 +1,4 @@
 #include "combat.h"
-#include "faction.h"
-#include "disguise_data.h"
-
-#include <unordered_map>
-#include <thread>
 
 
 extern PlayerDisguiseStatus playerDisguiseStatus;
@@ -40,7 +35,9 @@ void StartCombat(RE::Actor* npc, RE::Actor* player, RE::TESFaction* npcFaction) 
     }
 }
 
+void LoseLineOfSight() {
 
+}
 
 void CheckAndReAddPlayerToFaction(RE::Actor* player) {
     auto now = RE::Calendar::GetSingleton()->GetHoursPassed();
