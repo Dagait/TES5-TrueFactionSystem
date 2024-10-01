@@ -1,6 +1,6 @@
 #include "faction.h"
 
-const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
+std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
     {"npeBanditFaction", 0x0001BCC0},
     {"npeImperialFaction", 0x0002BF9A}, 
     {"npeBladesFaction", 0x00072834},
@@ -19,6 +19,14 @@ const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
     {"npeWinterholdFaction", 0x00014217},  
     {"npeThalmorFaction", 0x00039F26},  
     {"npeSilverHandFaction", 0x000AA0A4}};
+
+// Only allow up to 20 mod added factions. I hope that's enough :D
+const std::vector<std::string> predefinedKeywords = {"npeFaction1", "npeFaction2", "npeFaction3", "npeFaction4",
+                                                     "npeFaction5", "npeFaction6", "npeFaction7", "npeFaction8",
+                                                     "npeFaction9", "npeFaction10", "npeFaction11", "npeFaction12", "npeFaction13", "npeFaction14",
+                                                    "npeFaction15", "npeFaction16", "npeFaction18", "npeFaction18", "npeFaction19", "npeFaction20"};
+
+std::unordered_map<RE::FormID, std::string> assignedKeywordsMap;
 
 static std::unordered_map<RE::FormID, std::string> factionFormIDToTagMap = {
     {0x0001BCC0, "npeBanditFaction"},      {0x0002BF9A, "npeImperialFaction"}, {0x00072834, "npeBladesFaction"},
@@ -211,6 +219,20 @@ std::vector<RE::TESFaction *> GetFactionsForActor(RE::Actor *actor) {
     return factions;
 }
 
+std::vector<RE::TESFaction *> GetAllFactions() {
+    std::vector<RE::TESFaction *> factions;
+    auto dataHandler = RE::TESDataHandler::GetSingleton();
+    const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
+
+    for (RE::TESFaction *faction : allFactions) {
+        if (strcmp(faction->GetName(), "") != 0) {
+            factions.push_back(faction);
+        }
+    }
+
+    return factions;
+}
+
 RE::BSFixedString GetFactionEditorID(RE::TESFaction *faction) {
     if (faction) {
         const char *editorID = faction->GetFormEditorID();
@@ -251,4 +273,61 @@ RE::TESFaction *GetFactionByEditorID(RE::BSFixedString factionEditorID) {
     }
 
     return nullptr;
+}
+
+bool IsKeywordAssigned(const std::string &keywordName) {
+    for (const auto &entry : assignedKeywordsMap) {
+        if (entry.second == keywordName) {
+            return true;
+        }
+    }
+    return false;
+}
+
+RE::BGSKeyword *AssignPredefinedKeywordToFaction(RE::TESFaction *faction) {
+    if (!faction) {
+        return nullptr;
+    }
+
+    for (const auto &keywordName : predefinedKeywords) {
+        // Check if the keyword is already assigned
+        if (!IsKeywordAssigned(keywordName)) {
+            auto keyword = GetKeywordByEditorID(RE::BSFixedString(keywordName.c_str()));
+            if (keyword) {
+                // Associate this keyword with the faction
+                assignedKeywordsMap[faction->GetFormID()] = keywordName;
+                factionArmorTags.push_back({keywordName, faction->GetFormID()});
+                return keyword;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+bool AddModFaction(RE::TESFaction *faction) {
+    if (!faction) {
+        return false;
+    }
+
+    RE::BGSKeyword *assignedKeyword = AssignPredefinedKeywordToFaction(faction);
+    if (!assignedKeyword) {
+        RE::ConsoleLog::GetSingleton()->Print("Failed to assign a keyword for this faction.");
+        return false;
+    }
+
+    RE::ConsoleLog::GetSingleton()->Print("Faction and corresponding keyword added successfully!");
+    return true;
+}
+
+void HandleAddFactionFromMCM(RE::TESFaction *faction) {
+    if (!faction) {
+        return;
+    }
+
+    if (AddModFaction(faction)) {
+        RE::ConsoleLog::GetSingleton()->Print("Faction and keyword assigned successfully!");
+    } else {
+        RE::ConsoleLog::GetSingleton()->Print("Failed to add faction.");
+    }
 }

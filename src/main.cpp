@@ -81,6 +81,13 @@ float PapyrusGetDisguiseBonusValueForFaction(RE::StaticFunctionTag *, RE::TESFac
     return GetDisguiseBonusValueForFaction(faction);
 }
 
+void PapyrusHandleAddFactionFromMCM(RE::StaticFunctionTag *, RE::TESFaction *faction) {
+    return HandleAddFactionFromMCM(faction);
+}
+
+
+std::vector<RE::TESFaction *> PapyrusGetAllFactions(RE::StaticFunctionTag *) { return GetAllFactions(); }
+
 
 // Function to bind the Papyrus function
 bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
@@ -91,6 +98,8 @@ bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
     vm->RegisterFunction("GetDisguiseValueForFaction", "npeTFS_NativeFunctions", PapyrusGetDisguiseValueForFaction);
     vm->RegisterFunction("GetDisguiseBonusValueForFaction", "npeTFS_NativeFunctions", PapyrusGetDisguiseBonusValueForFaction);
     vm->RegisterFunction("GetFactionEditorID", "npeTFS_NativeFunctions", PapyrusGetFactionEditorID);
+    vm->RegisterFunction("HandleAddFactionFromMCM", "npeTFS_NativeFunctions", PapyrusHandleAddFactionFromMCM);
+    vm->RegisterFunction("GetAllFactions", "npeTFS_NativeFunctions", PapyrusGetAllFactions);
     return true;
 }
 

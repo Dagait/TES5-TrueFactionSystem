@@ -4,11 +4,13 @@ Import npeTFS_NativeFunctions
 
 ; -------- PRIVATE VARS --------
 Armor[] wornArmors
+Faction[] availableFactions
 int[] _wornArmorMenuOIDs
 int selectedArmorIndex = -1
 int wornArmorCount = 0
 
 int selectedKeywordIndex = 0
+int selectedFactionIndex = 0
 
 string[] availableKeywordNames
 Int[] availableKeywordFormIDs
@@ -16,14 +18,20 @@ Int[] availableKeywordFormIDs
 int _keywordDropdownOID
 int _addKeywordTextOptionOID
 int _removeKeywordTextOptionOID
+int _resetModTextOptionOID
+int _addFactionOptionOID
 
 string playerInformationPageName = "Player Information"
 string armorKeywordSettingPageName = "Armor-Keyword Setting"
+string factionManagementPageName = "Manage Factions"
+string modSettingsPageName = "Settings"
 
 Event OnConfigInit()
+    LoadCustomContent("skyui/TrueFactionSystem/TFS.dds")
     ; Initialize worn armors
     wornArmors = GetWornArmors(Game.GetPlayer())
     _wornArmorMenuOIDs = new int[100]
+    availableFactions = GetAllFactions()
     InitCustomKeywords()
 
     ; Count how many valid armors the player is wearing
@@ -37,9 +45,11 @@ Event OnConfigInit()
     endWhile
 
     ; Define pages for the MCM
-    Pages = new string[2]
+    Pages = new string[4]
     Pages[0] = playerInformationPageName
     Pages[1] = armorKeywordSettingPageName
+    Pages[2] = factionManagementPageName
+    Pages[3] = modSettingsPageName
 endEvent
 
 Function InitWornArmor()
@@ -213,8 +223,7 @@ Function PlayerInformationPage()
             string factionEditorID = GetFactionEditorID(currentFaction)
             float disguiseValue = GetDisguiseValueForFaction(currentFaction)
             float disguiseBonusValue = GetDisguiseBonusValueForFaction(currentFaction)
-            ; Display the faction name (via Faction ID, because most factions does not have a name) and disguise value
-            ; Factions EditorID is an empty string??
+            ; Display the faction name (via Faction ID, because most factions does not have a name) and disguise value (+BonusValue)
             AddTextOption("Faction: " + factionEditorID, Math.Floor(disguiseValue) + " (+" + Math.Floor(disguiseBonusValue) + ")")
             index += 1
         endWhile
@@ -223,13 +232,52 @@ Function PlayerInformationPage()
     endif
 endFunction
 
+Function SettingsPage()
+    AddHeaderOption("General Settings")
+    AddEmptyOption()
+    ; Reload the factions, because of modded factions, if the user changes the load order, the FormID changes!
+    _resetModTextOptionOID = AddTextOption("Reset Mod", "")
+endFunction
+
+Function FactionManagementPage()
+    AddHeaderOption("Manage Factions")
+    AddEmptyOption()
+
+    ; List all available factions
+    ; If the user clicks a faction, store it (selectedFactionIndex)
+    ; If the user now clicks add Faction as Disguise valid (Or a different name), it should execute the native Function HandleAddFactionFromMCM
+    _addFactionOptionOID = AddTextOption("Add Selected Faction as Disguise Valid", "")
+    AddEmptyOption()
+    int factionCount = availableFactions.Length
+
+    if factionCount > 0
+        ; List all available factions
+        int index = 0
+        while index < factionCount
+            Faction currentFaction = availableFactions[index]
+            string factionEditorID = GetFactionEditorID(currentFaction)
+
+            ; Display the faction name and store its index for future selection
+            AddTextOption(currentFaction.GetName(), index)
+            index += 1
+        endWhile
+    else
+        AddTextOption("No Factions Available", 0)
+    endif
+endFunction
+
 ; This event handles resetting and updating the page
 Event OnPageReset(string a_page)
+    UnloadCustomContent()
     InitWornArmor()
     if (a_page == playerInformationPageName)
         PlayerInformationPage()
     elseIf (a_page == armorKeywordSettingPageName)
         ArmorKeywordPage()
+    elseif (a_page == factionManagementPageName)
+        FactionManagementPage()
+    elseif (a_page == modSettingsPageName)
+        SettingsPage()
     endIf
 EndEvent
 
@@ -246,6 +294,7 @@ EndEvent
 Event OnOptionSelect(int a_option)
     int index = 0
     bool breakLoop = false
+
     while !breakLoop && index < wornArmorCount
         if a_option == _wornArmorMenuOIDs[index] && wornArmors[index]
             selectedArmorIndex = index
@@ -281,6 +330,12 @@ Event OnOptionSelect(int a_option)
 
         ; Refresh the menu to show the updated keywords list
         ForcePageReset()
+    elseif a_option == _addFactionOptionOID
+        Faction selectedFaction = availableFactions[selectedFactionIndex]
+        if selectedFaction
+            HandleAddFactionFromMCM(selectedFaction)  ; Call native function to add the faction
+            Debug.Notification("Added faction: " + GetFactionEditorID(selectedFaction) + " as disguise valid")
+        endif
     endif
 EndEvent
 

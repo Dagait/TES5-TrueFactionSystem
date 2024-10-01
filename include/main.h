@@ -104,6 +104,7 @@ RE::BSFixedString PapyrusGetFactionEditorID(RE::StaticFunctionTag*, RE::TESFacti
 float PapyrusGetDisguiseBonusValueForFaction(RE::StaticFunctionTag*, RE::TESFaction* faction);
 
 
+std::vector<RE::TESFaction*> PapyrusGetAllFactions(RE::StaticFunctionTag*);
 
 void SaveCallback(SKSE::SerializationInterface* a_intfc);
 
