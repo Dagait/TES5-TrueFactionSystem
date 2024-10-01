@@ -2,9 +2,10 @@ Scriptname npeTFS_MCM extends SKI_ConfigBase
 
 ; -------- NATIVE SKSE FUNCTIONS --------
 Bool Function AddKeywordToArmor(Armor akArmor, Keyword akKeyword) global Native
+Bool Function RemoveKeywordFromArmor(Armor akArmor, Keyword akKeyword) global Native
 Keyword Function GetKeywordByEditorID(string akKeywordName) global Native
 Faction[] Function GetFactionsForActor(Actor akActor) global Native
-float Function GetDisguiseValueForFaction(string akFactionName) global Native
+float Function GetDisguiseValueForFaction(Faction akFaction) global Native
 string Function GetFactionEditorID(Faction akFaction) global Native
 
 ; -------- PRIVATE VARS --------
@@ -20,6 +21,7 @@ Int[] availableKeywordFormIDs
 
 int _keywordDropdownOID
 int _addKeywordTextOptionOID
+int _removeKeywordTextOptionOID
 
 string playerInformationPageName = "Player Information"
 string armorKeywordSettingPageName = "Armor-Keyword Setting"
@@ -52,8 +54,8 @@ Function InitWornArmor()
 endFunction
 
 Function InitCustomKeywords()
-    availableKeywordNames = new string[18]
-    availableKeywordFormIDs = new int[18]
+    availableKeywordNames = new string[19]
+    availableKeywordFormIDs = new int[19]
 
     ; Get all my custom keywords by name, because the formid changes with the load order...SAD
 
@@ -110,6 +112,9 @@ Function InitCustomKeywords()
 
     availableKeywordNames[17] = "Winterhold Faction"
     availableKeywordFormIDs[17] = GetKeywordByEditorID("npeWinterholdFaction").GetFormID()
+
+    availableKeywordNames[18] = "Full Covered Face"
+    availableKeywordFormIDs[18] = GetKeywordByEditorID("npeCoveredFace").GetFormID()
 endFunction
 
 ; Function to retrieve keywords associated with a given armor
@@ -151,7 +156,7 @@ EndFunction
 
 Function ArmorKeywordPage()
     ; Left panel: list all worn armors
-    AddHeaderOption("Worn Armor")
+    AddHeaderOption("Worn Armor | Form ID")
     int index = 0
     while index < wornArmorCount
         if wornArmors[index]
@@ -187,6 +192,10 @@ Function ArmorKeywordPage()
 
         ; Button to add the selected keyword to the armor
         _addKeywordTextOptionOID = AddTextOption("Add Selected Keyword", "")
+
+        ; Button to add the selected keyword to the armor
+        AddEmptyOption()
+        _removeKeywordTextOptionOID = AddTextOption("Remove Selected Keyword", "")
     else
         AddEmptyOption()
         AddHeaderOption("No Armor Selected")
@@ -206,10 +215,12 @@ Function PlayerInformationPage()
         int index = 0
         while index < playerFactions.Length
             Faction currentFaction = playerFactions[index]
+
             string factionEditorID = GetFactionEditorID(currentFaction)
-            float disguiseValue = GetDisguiseValueForFaction(factionEditorID)
-            ; Display the faction name and ID
-            AddTextOption("Faction: " + currentFaction.GetName(), disguiseValue)
+            float disguiseValue = GetDisguiseValueForFaction(currentFaction)
+            ; Display the faction name (via Faction ID, because most factions does not have a name) and disguise value
+            ; Factions EditorID is an empty string??
+            AddTextOption("Faction: " + factionEditorID, disguiseValue)
             index += 1
         endWhile
     else
@@ -243,7 +254,6 @@ Event OnOptionSelect(int a_option)
     while !breakLoop && index < wornArmorCount
         if a_option == _wornArmorMenuOIDs[index] && wornArmors[index]
             selectedArmorIndex = index
-            Debug.Notification("Selected armor: " + wornArmors[index].GetName())
 
             ; Dynamically update the page to show keywords by forcing a page reset
             ForcePageReset() ; This forces the page to refresh and re-trigger OnPageReset()
@@ -261,6 +271,17 @@ Event OnOptionSelect(int a_option)
             Debug.Notification("Keyword successfully added to: " + wornArmors[selectedArmorIndex].GetName())
         else
             Debug.Notification("Failed to add keyword.")
+        endif
+
+        ; Refresh the menu to show the updated keywords list
+        ForcePageReset()
+    elseif a_option == _removeKeywordTextOptionOID && selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
+        Keyword newKeyword = Game.GetFormFromFile(availableKeywordFormIDs[selectedKeywordIndex], "TrueFactionSystem.esp") as Keyword
+        Debug.Notification(""+availableKeywordFormIDs[selectedKeywordIndex])
+        if RemoveKeywordFromArmor(wornArmors[selectedArmorIndex], newKeyword)
+            Debug.Notification("Keyword successfully removed from: " + wornArmors[selectedArmorIndex].GetName())
+        else
+            Debug.Notification("Failed to remove keyword.")
         endif
 
         ; Refresh the menu to show the updated keywords list

@@ -1,4 +1,5 @@
 #pragma once
+#include "disguise_data.h"
 
 #include <string>
 #include <unordered_map>
@@ -9,6 +10,9 @@
 
 
 using namespace RE;
+
+extern const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags;
+extern const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots;
 
 // Faction utility functions
 /**
@@ -52,7 +56,7 @@ std::vector<RE::TESFaction*> GetFactionsForActor(RE::Actor* actor);
 /**
  *
  */
-RE::TESFaction* GetFactionByEditorID(RE::BSFixedString factionName);
+RE::TESFaction* GetFactionByEditorID(RE::BSFixedString factionEditorID);
 
 
 /**

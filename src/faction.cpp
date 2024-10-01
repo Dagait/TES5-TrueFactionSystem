@@ -1,5 +1,4 @@
 #include "faction.h"
-#include "disguise_data.h"
 
 const std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
     {"npeBanditFaction", 0x0001BCC0},
@@ -174,14 +173,7 @@ RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
         return nullptr;
     }
 
-    std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> armorSlots = {
-        RE::BGSBipedObjectForm::BipedObjectSlot::kHead, RE::BGSBipedObjectForm::BipedObjectSlot::kBody,
-        RE::BGSBipedObjectForm::BipedObjectSlot::kHands, RE::BGSBipedObjectForm::BipedObjectSlot::kFeet,
-        RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet,
-        RE::BGSBipedObjectForm::BipedObjectSlot::kHair
-    };
-
-    for (auto &slot : armorSlots) {
+    for (auto &slot : allArmorSlots) {
         RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot);
         if (wornArmor) {
             for (const auto &[tag, factionID] : factionArmorTags) {
@@ -211,7 +203,7 @@ std::vector<RE::TESFaction *> GetFactionsForActor(RE::Actor *actor) {
     const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
 
     for (RE::TESFaction *faction : allFactions) {
-        if (faction && actor->IsInFaction(faction) && strcmp(faction->GetName(), "") != 0) {
+        if (faction && actor->IsInFaction(faction)) {
             factions.push_back(faction);
         }
     }
@@ -222,15 +214,26 @@ std::vector<RE::TESFaction *> GetFactionsForActor(RE::Actor *actor) {
 RE::BSFixedString GetFactionEditorID(RE::TESFaction *faction) {
     if (faction) {
         const char *editorID = faction->GetFormEditorID();
-        if (editorID) {
+
+        // Check if editorID is valid
+        if (editorID && strlen(editorID) > 0) {
             return RE::BSFixedString(editorID);
+        } else {
+            // Fallback: return the faction's form ID in hexadecimal as a string
+            char formIDBuffer[10];  // enough space for "0x" + 8 hex digits + null terminator
+            snprintf(formIDBuffer, sizeof(formIDBuffer), "0x%08X", faction->GetFormID());
+            auto factionName = factionFormIDToTagMap.find(faction->GetFormID());
+            if (factionName != factionFormIDToTagMap.end()) {
+                return RE::BSFixedString(factionName->second.c_str());
+            }
+            return RE::BSFixedString(formIDBuffer);
         }
     }
-    return RE::BSFixedString("");
+    return RE::BSFixedString("No FactionID found!");
 }
 
-RE::TESFaction *GetFactionByEditorID(RE::BSFixedString factionName) {
-    if (factionName.empty()) {
+RE::TESFaction *GetFactionByEditorID(RE::BSFixedString factionEditorID) {
+    if (factionEditorID.empty()) {
         return nullptr;
     }
 
@@ -242,7 +245,7 @@ RE::TESFaction *GetFactionByEditorID(RE::BSFixedString factionName) {
     const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
 
     for (RE::TESFaction *faction : allFactions) {
-        if (faction && strcmp(factionName.c_str(), faction->GetFormEditorID()) == 0) {
+        if (faction && strcmp(factionEditorID.c_str(), faction->GetFormEditorID()) == 0) {
             return faction;
         }
     }

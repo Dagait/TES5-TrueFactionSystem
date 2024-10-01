@@ -50,6 +50,10 @@ bool PapyrusAddKeywordToArmor(RE::StaticFunctionTag *, RE::TESObjectARMO *armor,
     return AddKeywordToArmor(armor, keyword);
 }
 
+bool PapyrusRemoveKeywordFromArmor(RE::StaticFunctionTag *, RE::TESObjectARMO *armor, RE::BGSKeyword *keyword) {
+    return RemoveKeywordFromArmor(armor, keyword);
+}
+
 RE::BGSKeyword *PapyrusGetKeywordByEditorID(RE::StaticFunctionTag *, RE::BSFixedString keyword) {
     return GetKeywordByEditorID(keyword);
 }
@@ -58,8 +62,8 @@ std::vector<RE::TESFaction *> PapyrusGetFactionsForActor(RE::StaticFunctionTag *
     return GetFactionsForActor(actor);
 }
 
-float PapyrusGetDisguiseValueForFaction(RE::StaticFunctionTag *, RE::BSFixedString factionName) {
-    return GetDisguiseValueForFaction(factionName);
+float PapyrusGetDisguiseValueForFaction(RE::StaticFunctionTag *, RE::TESFaction *faction) {
+    return GetDisguiseValueForFaction(faction);
 }
 
 RE::BSFixedString PapyrusGetFactionEditorID(RE::StaticFunctionTag *, RE::TESFaction *faction) {
@@ -69,6 +73,7 @@ RE::BSFixedString PapyrusGetFactionEditorID(RE::StaticFunctionTag *, RE::TESFact
 // Function to bind the Papyrus function
 bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
     vm->RegisterFunction("AddKeywordToArmor", "npeTFS_MCM", PapyrusAddKeywordToArmor);
+    vm->RegisterFunction("RemoveKeywordFromArmor", "npeTFS_MCM", PapyrusRemoveKeywordFromArmor);
     vm->RegisterFunction("GetKeywordByEditorID", "npeTFS_MCM", PapyrusGetKeywordByEditorID);
     vm->RegisterFunction("GetFactionsForActor", "npeTFS_MCM", PapyrusGetFactionsForActor);
     vm->RegisterFunction("GetDisguiseValueForFaction", "npeTFS_MCM", PapyrusGetDisguiseValueForFaction);
