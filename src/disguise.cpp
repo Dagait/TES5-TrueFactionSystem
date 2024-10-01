@@ -194,13 +194,14 @@ bool IsPlayerInDarkArea(RE::Actor *player) {
             return true;
         }
 
+        if (!IsPlayerNearLightSource(player)) {
+            return true;
+        }
+
         float currentTime = sky->currentGameHour;
         if (IsNightTime()) {
             return true;
         }
-
-        // Optionally, adjust based on specific light sources around the player in the environment
-        // TODO: Implement a more detailed light source check for exterior environments
     }
 
     return false;
