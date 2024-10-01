@@ -18,7 +18,7 @@ coc npeTFSTestCell
 <div align="center">
 
 | **Faction**         | **Tag**              | **Working** | **Reason** |
-|---------------------|----------------------|----------------------|----------------------|
+|---------------------|----------------------|:---:|----------------------|
 | Bandit Faction      | npeBanditFaction         | <ul><li>[x] </li></ul> | |
 | Imperial Faction    | npeImperialFaction       | <ul><li>[x] </li></ul> | |
 | Blades Faction      | npeBladesFaction         | <ul><li>[x] </li></ul> | |
@@ -43,17 +43,18 @@ coc npeTFSTestCell
 Table 1: Currently implemented factions and their corresponding armor tags
 
 </div>
+There is also an exclusive tag called "npeCoveredFace". This means that the player's disguise is at 100.0 and cannot be detected (exposed) until he attacks the faction or disguises himself.
   
 - **Multiple Faction Support**: The player can wear armor pieces from different factions simultaneously and will be recognized as an ally by NPCs from multiple factions accordingly.
 
-- **Detection Based on Disguise Value**: The likelihood of NPCs recognizing the player as an enemy depends on the disguise value of the armor worn and proximity to the NPCs. If the Disguise value is less than 5.0, the faction will be removed. A disguise value of 100.0 would mean perfect disguise, which is currently not possible. But will be implemented (Fully covered face).
+- **Detection Based on Disguise Value**: The likelihood of NPCs recognizing the player as an enemy depends on the disguise value of the armor worn and proximity to the NPCs. If the Disguise value is less than 5.0, the faction will be removed. A disguise value of 100.0 would be perfect disguise, which can be achieved by wearing a full outfit (such as outfits that cover the player's face).
 
 <div align="center">
 
 | **Armor Slot**   | **Disguise Value (Weight)** |
-|------------------|-----------------------------|
+|------------------|:---:|
 | Chest Armor      | 30.0                        |
-| Helmet           | 12.0                        |
+| Helmet           | 17.0                        |
 | Gloves           | 4.0                         |
 | Forearm Armor    | 8.0                         |
 | Shoes/Boots      | 5.0                         |
@@ -104,10 +105,11 @@ $$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 
 ## Installation Instructions
 
-1. **SKSE64** (Skyrim Script Extender) must be installed.
-2. SkyUI must also be installed, because of the new implemented MCM.
+1. [**SKSE64**](https://skse.silverlock.org/) (1.6.1170) must be installed.
+2. [SkyUI](https://www.nexusmods.com/skyrimspecialedition/mods/12604) must also be installed, because of the new implemented MCM.
 3. Copy all the files  into your `Skyrim Special Edition/Data/` folder.
 4. Start the game and test the plugin by wearing faction armors and approaching the corresponding faction NPCs.
+
 
 ## Usage Instructions
 
