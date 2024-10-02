@@ -6,14 +6,18 @@ Import npeTFS_NativeFunctions
 Armor[] wornArmors
 Faction[] availableFactions
 int[] _wornArmorMenuOIDs
+int[] _availableFactionsMenuOIDs
 int selectedArmorIndex = -1
+int selectedFactionIndex = -1
 int wornArmorCount = 0
 
 int selectedKeywordIndex = 0
-int selectedFactionIndex = 0
 
 string[] availableKeywordNames
 Int[] availableKeywordFormIDs
+
+int maxFactions = 50 ; Because papyrus does not like dynamic arrays, I have to limit it
+int currentFactionCount = 0 ; max factions are 50
 
 int _keywordDropdownOID
 int _addKeywordTextOptionOID
@@ -28,10 +32,11 @@ string modSettingsPageName = "Settings"
 
 Event OnConfigInit()
     LoadCustomContent("skyui/TrueFactionSystem/TFS.dds")
-    ; Initialize worn armors
     wornArmors = GetWornArmors(Game.GetPlayer())
-    _wornArmorMenuOIDs = new int[100]
     availableFactions = GetAllFactions()
+    _wornArmorMenuOIDs = new int[100]
+    _availableFactionsMenuOIDs = new int[100]
+
     InitCustomKeywords()
 
     ; Count how many valid armors the player is wearing
@@ -57,9 +62,15 @@ Function InitWornArmor()
     _wornArmorMenuOIDs = new int[100]
 endFunction
 
+Function InitAvailableFactions()
+    availableFactions = GetAllFactions()
+    _availableFactionsMenuOIDs = new int[100]
+endFunction
+
 Function InitCustomKeywords()
-    availableKeywordNames = new string[19]
-    availableKeywordFormIDs = new int[19]
+    ; Cannot use maxFactions for array init, because of reasons.
+    availableKeywordNames = new string[50]
+    availableKeywordFormIDs = new int[50]
 
     ; Get all my custom keywords by name, because the formid changes with the load order...SAD
 
@@ -119,6 +130,22 @@ Function InitCustomKeywords()
 
     availableKeywordNames[18] = "Full Covered Face"
     availableKeywordFormIDs[18] = GetKeywordByEditorID("npeCoveredFace").GetFormID()
+
+    currentFactionCount = 19
+endFunction
+
+Function AddNewFaction(string factionName, Keyword factionKeyword)
+    if currentFactionCount >= maxFactions
+        Debug.Notification("Cannot add more factions. Limit reached.")
+        return
+    endif
+
+    ; Add the new faction and its keyword
+    availableKeywordNames[currentFactionCount] = factionName
+    availableKeywordFormIDs[currentFactionCount] = factionKeyword.GetFormID()
+    currentFactionCount += 1
+
+    Debug.Notification("Added faction: " + factionName)
 endFunction
 
 ; Function to retrieve keywords associated with a given armor
@@ -176,6 +203,7 @@ Function ArmorKeywordPage()
 
         AddEmptyOption()
         AddHeaderOption("Selected Armor Keywords")
+        AddEmptyOption()
 
         ; Retrieve and display keywords for the selected armor
         Keyword[] keywords = GetArmorKeywords(selectedArmor)
@@ -191,8 +219,10 @@ Function ArmorKeywordPage()
 
         ; Dropdown for selecting a new keyword to add
         AddEmptyOption()
+        AddEmptyOption()
         AddHeaderOption("Add Keyword to Armor")
         _keywordDropdownOID = AddMenuOption("Select Keyword", availableKeywordNames[selectedKeywordIndex])
+        AddEmptyOption()
 
         ; Button to add the selected keyword to the armor
         _addKeywordTextOptionOID = AddTextOption("Add Selected Keyword", "")
@@ -242,23 +272,40 @@ endFunction
 Function FactionManagementPage()
     AddHeaderOption("Manage Factions")
     AddEmptyOption()
-
-    ; List all available factions
-    ; If the user clicks a faction, store it (selectedFactionIndex)
-    ; If the user now clicks add Faction as Disguise valid (Or a different name), it should execute the native Function HandleAddFactionFromMCM
-    _addFactionOptionOID = AddTextOption("Add Selected Faction as Disguise Valid", "")
+    int index = 0
+    
     AddEmptyOption()
-    int factionCount = availableFactions.Length
+    if selectedFactionIndex != -1 && availableFactions[selectedFactionIndex]
+        Faction selectedFaction = availableFactions[selectedFactionIndex]
 
+        AddEmptyOption()
+        AddHeaderOption("Selected Faction")
+        AddTextOption("Faction: " + selectedFaction.GetName(), selectedFaction.GetFormID())
+
+        ; Dropdown for selecting a new keyword to add
+        AddEmptyOption()
+        ; Button to add the selected keyword to the armor
+        AddEmptyOption()
+        _addFactionOptionOID = AddTextOption("Add Selected Faction as Disguise Valid", "")
+        AddEmptyOption()
+    else
+        AddEmptyOption()
+        AddHeaderOption("No Faction Selected")
+    endif
+
+    int factionCount = availableFactions.Length
+    AddHeaderOption("Select Faction")
+    AddEmptyOption()
+    AddEmptyOption()
     if factionCount > 0
         ; List all available factions
-        int index = 0
+        index = 0
         while index < factionCount
             Faction currentFaction = availableFactions[index]
             string factionEditorID = GetFactionEditorID(currentFaction)
 
             ; Display the faction name and store its index for future selection
-            AddTextOption(currentFaction.GetName(), index)
+            _availableFactionsMenuOIDs[index] = AddTextOption(currentFaction.GetName(), index)
             index += 1
         endWhile
     else
@@ -269,12 +316,13 @@ endFunction
 ; This event handles resetting and updating the page
 Event OnPageReset(string a_page)
     UnloadCustomContent()
-    InitWornArmor()
     if (a_page == playerInformationPageName)
         PlayerInformationPage()
     elseIf (a_page == armorKeywordSettingPageName)
+        InitWornArmor()
         ArmorKeywordPage()
     elseif (a_page == factionManagementPageName)
+        InitAvailableFactions()
         FactionManagementPage()
     elseif (a_page == modSettingsPageName)
         SettingsPage()
@@ -290,53 +338,77 @@ Event OnOptionMenuOpen(int a_option)
     endif
 EndEvent
 
-; This event handles the armor selection and dynamically updates the keywords panel
-Event OnOptionSelect(int a_option)
+Function HandleArmorSelection(int a_option)
     int index = 0
     bool breakLoop = false
-
     while !breakLoop && index < wornArmorCount
         if a_option == _wornArmorMenuOIDs[index] && wornArmors[index]
             selectedArmorIndex = index
-
-            ; Dynamically update the page to show keywords by forcing a page reset
-            ForcePageReset() ; This forces the page to refresh and re-trigger OnPageReset()
+            ForcePageReset()
             breakLoop = true
         endif
         index += 1
     endWhile
+endFunction
 
-    ; Handle the Add Keyword button
-    if a_option == _addKeywordTextOptionOID && selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
-        ; Retrieve the selected keyword from the list
-        Keyword newKeyword = Game.GetFormFromFile(availableKeywordFormIDs[selectedKeywordIndex], "TrueFactionSystem.esp") as Keyword
-        Debug.Notification(""+availableKeywordFormIDs[selectedKeywordIndex])
-        if AddKeywordToArmor(wornArmors[selectedArmorIndex], newKeyword)
-            Debug.Notification("Keyword successfully added to: " + wornArmors[selectedArmorIndex].GetName())
-        else
-            Debug.Notification("Failed to add keyword.")
+Function HandleFactionSelection(int a_option)
+    int index = 0
+    bool breakLoop = false
+    while !breakLoop && index < wornArmorCount
+        if a_option == _availableFactionsMenuOIDs[index] && availableFactions[index]
+            selectedFactionIndex = index
+            ForcePageReset()
+            breakLoop = true
         endif
+        index += 1
+    endWhile
+endFunction
 
-        ; Refresh the menu to show the updated keywords list
-        ForcePageReset()
-    elseif a_option == _removeKeywordTextOptionOID && selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
-        Keyword newKeyword = Game.GetFormFromFile(availableKeywordFormIDs[selectedKeywordIndex], "TrueFactionSystem.esp") as Keyword
-        Debug.Notification(""+availableKeywordFormIDs[selectedKeywordIndex])
-        if RemoveKeywordFromArmor(wornArmors[selectedArmorIndex], newKeyword)
-            Debug.Notification("Keyword successfully removed from: " + wornArmors[selectedArmorIndex].GetName())
-        else
-            Debug.Notification("Failed to remove keyword.")
-        endif
-
-        ; Refresh the menu to show the updated keywords list
-        ForcePageReset()
-    elseif a_option == _addFactionOptionOID
-        Faction selectedFaction = availableFactions[selectedFactionIndex]
-        if selectedFaction
-            HandleAddFactionFromMCM(selectedFaction)  ; Call native function to add the faction
-            Debug.Notification("Added faction: " + GetFactionEditorID(selectedFaction) + " as disguise valid")
-        endif
+Function HandleAddKeywordToArmor()
+    Keyword newKeyword = Game.GetFormFromFile(availableKeywordFormIDs[selectedKeywordIndex], "TrueFactionSystem.esp") as Keyword
+    Debug.Notification(""+availableKeywordFormIDs[selectedKeywordIndex])
+    if AddKeywordToArmor(wornArmors[selectedArmorIndex], newKeyword)
+        Debug.Notification("Keyword successfully added to: " + wornArmors[selectedArmorIndex].GetName())
+    else
+        Debug.Notification("Failed to add keyword.")
     endif
+endFunction
+
+Function HandleRemoveKeywordFromArmor()
+    Keyword newKeyword = Game.GetFormFromFile(availableKeywordFormIDs[selectedKeywordIndex], "TrueFactionSystem.esp") as Keyword
+    Debug.Notification(""+availableKeywordFormIDs[selectedKeywordIndex])
+    if RemoveKeywordFromArmor(wornArmors[selectedArmorIndex], newKeyword)
+        Debug.Notification("Keyword successfully removed from: " + wornArmors[selectedArmorIndex].GetName())
+    else
+        Debug.Notification("Failed to remove keyword.")
+    endif
+endFunction
+
+Function HandleAddFactionAsKeyword()
+    Faction selectedFaction = availableFactions[selectedFactionIndex]
+    if selectedFaction
+        Keyword newKeyword = HandleAddFactionFromMCM(selectedFaction)  ; Call native function to add the faction
+        AddNewFaction(selectedFaction.GetName(), newKeyword)
+        Debug.Notification("Added faction: " + GetFactionEditorID(selectedFaction) + " as disguise valid")
+    endif
+endFunction
+
+Event OnOptionSelect(int a_option)
+    HandleFactionSelection(a_option)
+    HandleArmorSelection(a_option)
+    
+
+    if a_option == _addKeywordTextOptionOID && selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
+        HandleAddKeywordToArmor()
+    elseif a_option == _removeKeywordTextOptionOID && selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
+        HandleRemoveKeywordFromArmor()
+    endif
+    
+    if a_option == _addFactionOptionOID && selectedFactionIndex != -1 && availableFactions[selectedFactionIndex]
+        HandleAddFactionAsKeyword()
+    endif
+
+    ForcePageReset()
 EndEvent
 
 ; This event handles the selection from the keyword dropdown
@@ -344,7 +416,6 @@ Event OnOptionMenuAccept(int a_option, int a_index)
     if a_option == _keywordDropdownOID
         selectedKeywordIndex = a_index
         Debug.Notification("Selected keyword: " + availableKeywordNames[selectedKeywordIndex])
-
         ; Refresh the menu to show the updated keyword selection
         ForcePageReset()
     endif

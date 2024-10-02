@@ -135,6 +135,14 @@ std::vector<std::pair<std::string, RE::TESFaction *>> GetRelevantFactions() {
         factions.push_back({"SilverHandFaction", thalmorFaction});
     }
 
+    for (const auto &[factionID, keyword] : assignedKeywordsMap) {
+        RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
+        if (faction) {
+            std::string factionName = GetFactionEditorID(faction).c_str();
+            factions.push_back({factionName, faction});
+        }
+    }
+
     return factions;
 }
 
@@ -305,29 +313,31 @@ RE::BGSKeyword *AssignPredefinedKeywordToFaction(RE::TESFaction *faction) {
     return nullptr;
 }
 
-bool AddModFaction(RE::TESFaction *faction) {
+RE::BGSKeyword *AddModFaction(RE::TESFaction *faction) {
     if (!faction) {
-        return false;
+        return nullptr;
     }
 
     RE::BGSKeyword *assignedKeyword = AssignPredefinedKeywordToFaction(faction);
     if (!assignedKeyword) {
         RE::ConsoleLog::GetSingleton()->Print("Failed to assign a keyword for this faction.");
-        return false;
+        return nullptr;
     }
 
     RE::ConsoleLog::GetSingleton()->Print("Faction and corresponding keyword added successfully!");
-    return true;
+    return assignedKeyword;
 }
 
-void HandleAddFactionFromMCM(RE::TESFaction *faction) {
+RE::BGSKeyword *HandleAddFactionFromMCM(RE::TESFaction *faction) {
     if (!faction) {
-        return;
+        return nullptr;
     }
 
-    if (AddModFaction(faction)) {
+    RE::BGSKeyword *newKeyword = AddModFaction(faction);
+    if (newKeyword) {
         RE::ConsoleLog::GetSingleton()->Print("Faction and keyword assigned successfully!");
-    } else {
-        RE::ConsoleLog::GetSingleton()->Print("Failed to add faction.");
+        return newKeyword;
     }
+    RE::ConsoleLog::GetSingleton()->Print("Failed to add faction.");
+    return nullptr;
 }

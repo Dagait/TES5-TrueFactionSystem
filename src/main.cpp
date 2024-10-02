@@ -81,7 +81,7 @@ float PapyrusGetDisguiseBonusValueForFaction(RE::StaticFunctionTag *, RE::TESFac
     return GetDisguiseBonusValueForFaction(faction);
 }
 
-void PapyrusHandleAddFactionFromMCM(RE::StaticFunctionTag *, RE::TESFaction *faction) {
+RE::BGSKeyword *PapyrusHandleAddFactionFromMCM(RE::StaticFunctionTag *, RE::TESFaction *faction) {
     return HandleAddFactionFromMCM(faction);
 }
 

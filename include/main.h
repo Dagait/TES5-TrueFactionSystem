@@ -106,6 +106,8 @@ float PapyrusGetDisguiseBonusValueForFaction(RE::StaticFunctionTag*, RE::TESFact
 
 std::vector<RE::TESFaction*> PapyrusGetAllFactions(RE::StaticFunctionTag*);
 
+RE::BGSKeyword* PapyrusHandleAddFactionFromMCM(RE::StaticFunctionTag*, RE::TESFaction* faction);
+
 void SaveCallback(SKSE::SerializationInterface* a_intfc);
 
 void LoadCallback(SKSE::SerializationInterface* a_intfc);

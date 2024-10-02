@@ -9,4 +9,4 @@ Faction[] Function GetAllFactions() global Native
 float Function GetDisguiseValueForFaction(Faction akFaction) global Native
 float Function GetDisguiseBonusValueForFaction(Faction akFaction) global Native
 string Function GetFactionEditorID(Faction akFaction) global Native
-Function HandleAddFactionFromMCM(Faction akFaction) global Native
+Keyword Function HandleAddFactionFromMCM(Faction akFaction) global Native

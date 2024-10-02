@@ -69,7 +69,7 @@ RE::BSFixedString GetFactionEditorID(RE::TESFaction* faction);
 /**
  *
  */
-void HandleAddFactionFromMCM(RE::TESFaction* faction);
+RE::BGSKeyword* HandleAddFactionFromMCM(RE::TESFaction* faction);
 
 
 std::vector<RE::TESFaction*> GetAllFactions();
