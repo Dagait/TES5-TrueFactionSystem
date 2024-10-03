@@ -1,6 +1,7 @@
 #pragma once
 #include "disguise_data.h"
 #include "armor_slots.h"
+#include "main.h"
 
 #include <string>
 #include <unordered_map>
@@ -71,5 +72,22 @@ RE::BSFixedString GetFactionEditorID(RE::TESFaction* faction);
  */
 RE::BGSKeyword* HandleAddFactionFromMCM(RE::TESFaction* faction);
 
+/**
+ *
+ */
+std::pair<std::vector<std::string>, std::vector<RE::TESFaction *>> GetAllAssignedFactionKeywordPairs();
 
+/**
+ *
+ */
+std::vector<std::string> GetAssignedKeywords();
+
+/**
+ *
+ */
+std::vector<RE::TESFaction*> GetAssignedFactions();
+
+/**
+ *
+ */
 std::vector<RE::TESFaction*> GetAllFactions();

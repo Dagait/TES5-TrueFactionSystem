@@ -25,9 +25,13 @@ int _removeKeywordTextOptionOID
 int _resetModTextOptionOID
 int _addFactionOptionOID
 
+string[] assignedKeywordsManage
+Faction[] assignedFactionsManage
+
 string playerInformationPageName = "Player Information"
 string armorKeywordSettingPageName = "Armor-Keyword Setting"
-string factionManagementPageName = "Manage Factions"
+string factionManagementPageName = "Assign Factions as Disguise"
+string factionOverviewPageName = "Disguise Faction Overview"
 string modSettingsPageName = "Settings"
 
 Event OnConfigInit()
@@ -38,6 +42,7 @@ Event OnConfigInit()
     _availableFactionsMenuOIDs = new int[100]
 
     InitCustomKeywords()
+    InitAvailableFactions()
 
     ; Count how many valid armors the player is wearing
     wornArmorCount = 0
@@ -50,16 +55,22 @@ Event OnConfigInit()
     endWhile
 
     ; Define pages for the MCM
-    Pages = new string[4]
+    Pages = new string[5]
     Pages[0] = playerInformationPageName
     Pages[1] = armorKeywordSettingPageName
     Pages[2] = factionManagementPageName
-    Pages[3] = modSettingsPageName
+    Pages[3] = factionOverviewPageName
+    Pages[4] = modSettingsPageName
 endEvent
 
 Function InitWornArmor()
     wornArmors = GetWornArmors(Game.GetPlayer())
     _wornArmorMenuOIDs = new int[100]
+endFunction
+
+Function InitAssignedKeywordFactionPair()
+    assignedKeywordsManage = GetAssignedKeywords()
+    assignedFactionsManage = GetAssignedFactions()
 endFunction
 
 Function InitAvailableFactions()
@@ -188,6 +199,8 @@ EndFunction
 Function ArmorKeywordPage()
     ; Left panel: list all worn armors
     AddHeaderOption("Worn Armor | Form ID")
+    AddEmptyOption()
+    AddEmptyOption()
     int index = 0
     while index < wornArmorCount
         if wornArmors[index]
@@ -196,6 +209,7 @@ Function ArmorKeywordPage()
         endif
         index += 1
     endWhile
+    AddEmptyOption()
 
     ; Right panel: display keywords for the selected armor if one is selected
     if selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
@@ -270,30 +284,36 @@ Function SettingsPage()
 endFunction
 
 Function FactionManagementPage()
-    AddHeaderOption("Manage Factions")
-    AddEmptyOption()
     int index = 0
     
     AddEmptyOption()
-    if selectedFactionIndex != -1 && availableFactions[selectedFactionIndex]
-        Faction selectedFaction = availableFactions[selectedFactionIndex]
+    
+    Faction selectedFaction = availableFactions[selectedFactionIndex]
+    string factionEditorID = GetFactionEditorID(selectedFaction)
 
-        AddEmptyOption()
-        AddHeaderOption("Selected Faction")
-        AddTextOption("Faction: " + selectedFaction.GetName(), selectedFaction.GetFormID())
-
-        ; Dropdown for selecting a new keyword to add
-        AddEmptyOption()
-        ; Button to add the selected keyword to the armor
-        AddEmptyOption()
-        _addFactionOptionOID = AddTextOption("Add Selected Faction as Disguise Valid", "")
-        AddEmptyOption()
+    AddEmptyOption()
+    AddHeaderOption("Selected Faction")
+    if selectedFaction
+        AddTextOption("Faction: " + selectedFaction.GetName(), factionEditorID, 1)
     else
-        AddEmptyOption()
-        AddHeaderOption("No Faction Selected")
+        AddTextOption("Faction: No Faction selected", "", 1)
     endif
+    
+
+    ; Dropdown for selecting a new keyword to add
+    AddEmptyOption()
+    ; Button to add the selected keyword to the armor
+    AddEmptyOption()
+    int flag = 0
+    if !selectedFaction
+        flag = 1
+    endif
+    _addFactionOptionOID = AddTextOption("Add Selected Faction as Disguise Valid", "", flag)
+    AddEmptyOption()
 
     int factionCount = availableFactions.Length
+    AddEmptyOption()
+    AddEmptyOption()
     AddHeaderOption("Select Faction")
     AddEmptyOption()
     AddEmptyOption()
@@ -302,15 +322,29 @@ Function FactionManagementPage()
         index = 0
         while index < factionCount
             Faction currentFaction = availableFactions[index]
-            string factionEditorID = GetFactionEditorID(currentFaction)
+            factionEditorID = GetFactionEditorID(currentFaction)
 
             ; Display the faction name and store its index for future selection
-            _availableFactionsMenuOIDs[index] = AddTextOption(currentFaction.GetName(), index)
+            _availableFactionsMenuOIDs[index] = AddTextOption(currentFaction.GetName(), factionEditorID)
             index += 1
         endWhile
     else
-        AddTextOption("No Factions Available", 0)
+        AddTextOption("No Factions Available", "")
     endif
+endFunction
+
+Function DisguiseKeywordAssignmentsPage()
+    AddHeaderOption("Disguise Keyword Assignments")
+    
+    int index = 0
+    while index < assignedKeywordsManage.Length
+        string currentKeyword = assignedKeywordsManage[index]
+        Faction currentFaction = assignedFactionsManage[index]
+        
+        Debug.Notification("Keyword: " + currentKeyword + " is assigned to Faction: " + currentFaction.GetName())
+
+        index += 1
+    endWhile
 endFunction
 
 ; This event handles resetting and updating the page
@@ -318,15 +352,17 @@ Event OnPageReset(string a_page)
     UnloadCustomContent()
     if (a_page == playerInformationPageName)
         PlayerInformationPage()
-    elseIf (a_page == armorKeywordSettingPageName)
+    elseif (a_page == armorKeywordSettingPageName)
         InitWornArmor()
         ArmorKeywordPage()
     elseif (a_page == factionManagementPageName)
-        InitAvailableFactions()
         FactionManagementPage()
+    elseif (a_page == factionOverviewPageName)
+        InitAssignedKeywordFactionPair()
+        DisguiseKeywordAssignmentsPage()
     elseif (a_page == modSettingsPageName)
         SettingsPage()
-    endIf
+    endif
 EndEvent
 
 Event OnOptionMenuOpen(int a_option)
@@ -354,8 +390,9 @@ endFunction
 Function HandleFactionSelection(int a_option)
     int index = 0
     bool breakLoop = false
-    while !breakLoop && index < wornArmorCount
+    while !breakLoop && index < availableFactions.Length
         if a_option == _availableFactionsMenuOIDs[index] && availableFactions[index]
+            Debug.Notification("Selected Faction: " + availableFactions[index].GetName())
             selectedFactionIndex = index
             ForcePageReset()
             breakLoop = true
@@ -388,8 +425,13 @@ Function HandleAddFactionAsKeyword()
     Faction selectedFaction = availableFactions[selectedFactionIndex]
     if selectedFaction
         Keyword newKeyword = HandleAddFactionFromMCM(selectedFaction)  ; Call native function to add the faction
-        AddNewFaction(selectedFaction.GetName(), newKeyword)
-        Debug.Notification("Added faction: " + GetFactionEditorID(selectedFaction) + " as disguise valid")
+        if newKeyword
+            string factionEditorID = GetFactionEditorID(selectedFaction)
+            AddNewFaction(selectedFaction.GetName(), newKeyword)
+            Debug.Notification("Added faction: " + selectedFaction.GetName() + " as disguise valid Keyword with Keyword: " + newKeyword.GetFormID())
+        else
+            Debug.Notification("Failed to add faction: " + selectedFaction.GetName())
+        endif
     endif
 endFunction
 
@@ -398,13 +440,13 @@ Event OnOptionSelect(int a_option)
     HandleArmorSelection(a_option)
     
 
-    if a_option == _addKeywordTextOptionOID && selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
+    if a_option == _addKeywordTextOptionOID && selectedArmorIndex > 0 && wornArmors[selectedArmorIndex]
         HandleAddKeywordToArmor()
-    elseif a_option == _removeKeywordTextOptionOID && selectedArmorIndex != -1 && wornArmors[selectedArmorIndex]
+    elseif a_option == _removeKeywordTextOptionOID && selectedArmorIndex > 0 && wornArmors[selectedArmorIndex]
         HandleRemoveKeywordFromArmor()
     endif
     
-    if a_option == _addFactionOptionOID && selectedFactionIndex != -1 && availableFactions[selectedFactionIndex]
+    if a_option == _addFactionOptionOID && selectedFactionIndex > 0 && selectedFactionIndex < availableFactions.Length && availableFactions[selectedFactionIndex]
         HandleAddFactionAsKeyword()
     endif
 

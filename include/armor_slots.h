@@ -1,10 +1,13 @@
 #pragma once
 #include <vector>
 
+#include "main.h"
 #include "faction.h"
 #include "log.h"
 #include "RE/B/BGSBipedObjectForm.h"
 
+
+extern RE::TESDataHandler* g_dataHandler;
 /**
  * @brief Constant values for the weight of different armor pieces.
  *
@@ -42,4 +45,4 @@ bool RemoveKeywordFromArmor(RE::TESObjectARMO* armor, RE::BGSKeyword* keyword);
 /**
  *
  */
-RE::BGSKeyword* GetKeywordByEditorID(RE::BSFixedString keyword);
+RE::BGSKeyword* GetKeywordByEditorID(RE::BSFixedString keywordEditorID);

@@ -211,14 +211,7 @@ std::vector<RE::TESFaction *> GetFactionsForActor(RE::Actor *actor) {
         return factions;
     }
 
-    auto dataHandler = RE::TESDataHandler::GetSingleton();
-    if (!dataHandler) {
-        return factions;
-    }
-
-    const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
-
-    for (RE::TESFaction *faction : allFactions) {
+    for (RE::TESFaction *faction : g_allFactions) {
         if (faction && actor->IsInFaction(faction)) {
             factions.push_back(faction);
         }
@@ -229,10 +222,8 @@ std::vector<RE::TESFaction *> GetFactionsForActor(RE::Actor *actor) {
 
 std::vector<RE::TESFaction *> GetAllFactions() {
     std::vector<RE::TESFaction *> factions;
-    auto dataHandler = RE::TESDataHandler::GetSingleton();
-    const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
 
-    for (RE::TESFaction *faction : allFactions) {
+    for (RE::TESFaction *faction : g_allFactions) {
         if (strcmp(faction->GetName(), "") != 0) {
             factions.push_back(faction);
         }
@@ -254,7 +245,7 @@ RE::BSFixedString GetFactionEditorID(RE::TESFaction *faction) {
             snprintf(formIDBuffer, sizeof(formIDBuffer), "0x%08X", faction->GetFormID());
             auto factionName = factionFormIDToTagMap.find(faction->GetFormID());
             if (factionName != factionFormIDToTagMap.end()) {
-                return RE::BSFixedString(factionName->second.c_str());
+                return RE::BSFixedString(factionName->second);
             }
             return RE::BSFixedString(formIDBuffer);
         }
@@ -267,14 +258,7 @@ RE::TESFaction *GetFactionByEditorID(RE::BSFixedString factionEditorID) {
         return nullptr;
     }
 
-    auto dataHandler = RE::TESDataHandler::GetSingleton();
-    if (!dataHandler) {
-        return nullptr;
-    }
-
-    const auto &allFactions = dataHandler->GetFormArray<RE::TESFaction>();
-
-    for (RE::TESFaction *faction : allFactions) {
+    for (RE::TESFaction *faction : g_allFactions) {
         if (faction && strcmp(factionEditorID.c_str(), faction->GetFormEditorID()) == 0) {
             return faction;
         }
@@ -283,12 +267,14 @@ RE::TESFaction *GetFactionByEditorID(RE::BSFixedString factionEditorID) {
     return nullptr;
 }
 
-bool IsKeywordAssigned(const std::string &keywordName) {
+bool IsKeywordAssigned(const std::string keywordName) {
     for (const auto &entry : assignedKeywordsMap) {
-        if (entry.second == keywordName) {
+        if (strcmp(entry.second.c_str(), keywordName.c_str()) == 0) {
+            RE::DebugNotification("Keyword was already assigned!");
             return true;
         }
     }
+    RE::DebugNotification("Keyword wasn't assigned!");
     return false;
 }
 
@@ -297,15 +283,19 @@ RE::BGSKeyword *AssignPredefinedKeywordToFaction(RE::TESFaction *faction) {
         return nullptr;
     }
 
-    for (const auto &keywordName : predefinedKeywords) {
+    for (const std::string &keywordEditorID : predefinedKeywords) {
         // Check if the keyword is already assigned
-        if (!IsKeywordAssigned(keywordName)) {
-            auto keyword = GetKeywordByEditorID(RE::BSFixedString(keywordName.c_str()));
+        if (!IsKeywordAssigned(keywordEditorID)) {
+            RE::DebugNotification("Trying to assign new Keyword!");
+            const auto keyword = GetKeywordByEditorID(RE::BSFixedString(keywordEditorID));
             if (keyword) {
+                RE::DebugNotification("Found keyword!");
                 // Associate this keyword with the faction
-                assignedKeywordsMap[faction->GetFormID()] = keywordName;
-                factionArmorTags.push_back({keywordName, faction->GetFormID()});
+                assignedKeywordsMap[faction->GetFormID()] = keywordEditorID;
+                factionArmorTags.push_back({keywordEditorID, faction->GetFormID()});
                 return keyword;
+            } else {
+                RE::DebugNotification(("Keyword not found: " + keywordEditorID).c_str());
             }
         }
     }
@@ -320,11 +310,11 @@ RE::BGSKeyword *AddModFaction(RE::TESFaction *faction) {
 
     RE::BGSKeyword *assignedKeyword = AssignPredefinedKeywordToFaction(faction);
     if (!assignedKeyword) {
-        RE::ConsoleLog::GetSingleton()->Print("Failed to assign a keyword for this faction.");
+        RE::DebugNotification("Failed to assign a keyword for this faction.");
         return nullptr;
     }
 
-    RE::ConsoleLog::GetSingleton()->Print("Faction and corresponding keyword added successfully!");
+    RE::DebugNotification("Faction and corresponding keyword added successfully!");
     return assignedKeyword;
 }
 
@@ -335,9 +325,51 @@ RE::BGSKeyword *HandleAddFactionFromMCM(RE::TESFaction *faction) {
 
     RE::BGSKeyword *newKeyword = AddModFaction(faction);
     if (newKeyword) {
-        RE::ConsoleLog::GetSingleton()->Print("Faction and keyword assigned successfully!");
+        RE::DebugNotification("Faction and keyword assigned successfully!");
         return newKeyword;
     }
-    RE::ConsoleLog::GetSingleton()->Print("Failed to add faction.");
+    RE::DebugNotification("Failed to add faction.");
     return nullptr;
+}
+
+std::pair<std::vector<std::string>, std::vector<RE::TESFaction *>> GetAllAssignedFactionKeywordPairs() {
+    std::vector<std::string> keywords;
+    std::vector<RE::TESFaction *> factions;
+
+    for (const auto &keyword : predefinedKeywords) {
+        for (const auto &entry : assignedKeywordsMap) {
+            if (entry.second == keyword) {
+                RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(entry.first);
+                if (faction) {
+                    keywords.push_back(keyword);
+                    factions.push_back(faction);
+                }
+                break;
+            }
+        }
+    }
+
+    return {keywords, factions};
+}
+
+std::vector<std::string> GetAssignedKeywords() {
+    std::vector<std::string> keywords;
+    auto pairs = GetAllAssignedFactionKeywordPairs();
+
+    for (const auto &pair : pairs.first) {
+        keywords.push_back(pair);
+    }
+
+    return keywords;
+}
+
+std::vector<RE::TESFaction *> GetAssignedFactions() {
+    std::vector<RE::TESFaction *> factions;
+    auto pairs = GetAllAssignedFactionKeywordPairs();
+
+    for (const auto &faction : pairs.second) {
+        factions.push_back(faction);
+    }
+
+    return factions;
 }

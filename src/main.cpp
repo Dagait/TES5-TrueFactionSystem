@@ -15,6 +15,9 @@ constexpr std::chrono::seconds DETECTION_INTERVAL_SECONDS(18);
 static EquipEventHandler g_equipEventHandler;
 static HitEventHandler g_hitEventHandler;
 
+RE::TESDataHandler *g_dataHandler = nullptr;
+std::vector<RE::TESFaction *> g_allFactions;
+
 RE::BSEventNotifyControl EquipEventHandler::ProcessEvent(const RE::TESEquipEvent *evn,
                                                          RE::BSTEventSource<RE::TESEquipEvent> *dispatcher) {
     if (!evn || !evn->actor) {
@@ -85,6 +88,12 @@ RE::BGSKeyword *PapyrusHandleAddFactionFromMCM(RE::StaticFunctionTag *, RE::TESF
     return HandleAddFactionFromMCM(faction);
 }
 
+std::vector<std::string> PapyrusGetAssignedKeywords(RE::StaticFunctionTag *) { return GetAssignedKeywords(); }
+
+std::vector<RE::TESFaction *> PapyrusGetAssignedFactions(RE::StaticFunctionTag *) { return GetAssignedFactions(); }
+
+
+
 
 std::vector<RE::TESFaction *> PapyrusGetAllFactions(RE::StaticFunctionTag *) { return GetAllFactions(); }
 
@@ -100,6 +109,8 @@ bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
     vm->RegisterFunction("GetFactionEditorID", "npeTFS_NativeFunctions", PapyrusGetFactionEditorID);
     vm->RegisterFunction("HandleAddFactionFromMCM", "npeTFS_NativeFunctions", PapyrusHandleAddFactionFromMCM);
     vm->RegisterFunction("GetAllFactions", "npeTFS_NativeFunctions", PapyrusGetAllFactions);
+    vm->RegisterFunction("GetAssignedKeywords", "npeTFS_NativeFunctions", PapyrusGetAssignedKeywords);
+    vm->RegisterFunction("GetAssignedFactions", "npeTFS_NativeFunctions", PapyrusGetAssignedFactions);
     return true;
 }
 
@@ -113,7 +124,25 @@ void LoadCallback(SKSE::SerializationInterface *a_intfc) {
     LoadArmorKeywordDataCallback(a_intfc);
 }
 
+std::vector<RE::TESFaction *> ConvertBSTArrayToVector(const RE::BSTArray<RE::TESFaction *> &bstArray) {
+    std::vector<RE::TESFaction *> vector;
 
+    for (std::uint32_t i = 0; i < bstArray.size(); ++i) {
+        vector.push_back(bstArray[i]);
+    }
+
+    return vector;
+}
+
+void InitializeGlobalData() {
+    g_dataHandler = RE::TESDataHandler::GetSingleton();
+    if (g_dataHandler) {
+        const auto &bstFactions = g_dataHandler->GetFormArray<RE::TESFaction>();
+        g_allFactions = ConvertBSTArrayToVector(bstFactions);
+    } else {
+        RE::ConsoleLog::GetSingleton()->Print("Failed to initialize TESDataHandler.");
+    }
+}
 
 
 extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKSE::LoadInterface *skse) {
@@ -124,6 +153,8 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             RE::ConsoleLog::GetSingleton()->Print("Loading in TFS...");
+            RE::ConsoleLog::GetSingleton()->Print("Loading in all Factions...");
+            InitializeGlobalData();
 
             auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
             if (equipEventSource) {
@@ -146,6 +177,7 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
 
             SKSE::GetSerializationInterface()->SetSaveCallback(SaveCallback);
             SKSE::GetSerializationInterface()->SetLoadCallback(LoadCallback);
+            RE::ConsoleLog::GetSingleton()->Print("TFS successfully loaded!");
         }
     });
 

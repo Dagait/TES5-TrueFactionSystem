@@ -15,6 +15,9 @@
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
 
+extern RE::TESDataHandler* g_dataHandler;
+extern std::vector<RE::TESFaction*> g_allFactions;
+
 // Class for handling equip events
 class EquipEventHandler : public RE::BSTEventSink<RE::TESEquipEvent> {
 public:
