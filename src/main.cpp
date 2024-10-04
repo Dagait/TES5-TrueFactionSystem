@@ -92,10 +92,12 @@ std::vector<std::string> PapyrusGetAssignedKeywords(RE::StaticFunctionTag *) { r
 
 std::vector<RE::TESFaction *> PapyrusGetAssignedFactions(RE::StaticFunctionTag *) { return GetAssignedFactions(); }
 
-
-
-
 std::vector<RE::TESFaction *> PapyrusGetAllFactions(RE::StaticFunctionTag *) { return GetAllFactions(); }
+
+bool PapyrusRemoveFactionKeywordAssignment(RE::StaticFunctionTag *, RE::BSFixedString keyword,
+                                           RE::TESFaction *faction) {
+    return RemoveFactionKeywordAssignment(keyword, faction);
+}
 
 
 // Function to bind the Papyrus function
@@ -111,6 +113,7 @@ bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
     vm->RegisterFunction("GetAllFactions", "npeTFS_NativeFunctions", PapyrusGetAllFactions);
     vm->RegisterFunction("GetAssignedKeywords", "npeTFS_NativeFunctions", PapyrusGetAssignedKeywords);
     vm->RegisterFunction("GetAssignedFactions", "npeTFS_NativeFunctions", PapyrusGetAssignedFactions);
+    vm->RegisterFunction("RemoveFactionKeywordAssignment", "npeTFS_NativeFunctions", PapyrusRemoveFactionKeywordAssignment);
     return true;
 }
 

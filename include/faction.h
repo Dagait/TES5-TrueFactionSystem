@@ -91,3 +91,8 @@ std::vector<RE::TESFaction*> GetAssignedFactions();
  *
  */
 std::vector<RE::TESFaction*> GetAllFactions();
+
+/**
+ *
+ */
+bool RemoveFactionKeywordAssignment(RE::BSFixedString targetKeyword, RE::TESFaction* faction);

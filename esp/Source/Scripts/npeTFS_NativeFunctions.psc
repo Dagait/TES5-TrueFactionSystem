@@ -12,3 +12,4 @@ string Function GetFactionEditorID(Faction akFaction) global Native
 Keyword Function HandleAddFactionFromMCM(Faction akFaction) global Native
 string[] Function GetAssignedKeywords() global Native
 Faction[] Function GetAssignedFactions() global Native
+Bool Function RemoveFactionKeywordAssignment(string akKeyword, Faction faction) global Native

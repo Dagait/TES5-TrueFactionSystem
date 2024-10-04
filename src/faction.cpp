@@ -24,7 +24,7 @@ std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
 const std::vector<std::string> predefinedKeywords = {"npeFaction1", "npeFaction2", "npeFaction3", "npeFaction4",
                                                      "npeFaction5", "npeFaction6", "npeFaction7", "npeFaction8",
                                                      "npeFaction9", "npeFaction10", "npeFaction11", "npeFaction12", "npeFaction13", "npeFaction14",
-                                                    "npeFaction15", "npeFaction16", "npeFaction18", "npeFaction18", "npeFaction19", "npeFaction20"};
+                                                    "npeFaction15", "npeFaction16", "npeFaction18", "npeFaction19", "npeFaction20"};
 
 std::unordered_map<RE::FormID, std::string> assignedKeywordsMap;
 
@@ -332,6 +332,30 @@ RE::BGSKeyword *HandleAddFactionFromMCM(RE::TESFaction *faction) {
     return nullptr;
 }
 
+bool RemoveFactionKeywordAssignment(RE::BSFixedString targetKeyword, RE::TESFaction *faction) {
+    if (!faction) {
+        return false;
+    }
+
+    auto it = assignedKeywordsMap.find(faction->GetFormID());
+    if (it != assignedKeywordsMap.end() && it->second == targetKeyword.c_str()) {
+        assignedKeywordsMap.erase(it);
+
+        auto removeIt = std::remove_if(
+            factionArmorTags.begin(), factionArmorTags.end(),
+            [&targetKeyword](const std::pair<std::string, RE::FormID> &tag) { return tag.first == targetKeyword.c_str(); });
+        if (removeIt != factionArmorTags.end()) {
+            factionArmorTags.erase(removeIt, factionArmorTags.end());
+        }
+        return true;
+    }
+
+    return false;
+}
+
+
+
+
 std::pair<std::vector<std::string>, std::vector<RE::TESFaction *>> GetAllAssignedFactionKeywordPairs() {
     std::vector<std::string> keywords;
     std::vector<RE::TESFaction *> factions;
@@ -344,7 +368,6 @@ std::pair<std::vector<std::string>, std::vector<RE::TESFaction *>> GetAllAssigne
                     keywords.push_back(keyword);
                     factions.push_back(faction);
                 }
-                break;
             }
         }
     }
