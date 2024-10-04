@@ -58,12 +58,24 @@ There is also an exclusive tag called "npeCoveredFace". This means that the play
 
 | **Armor Slot**   | **Disguise Value (Weight)** |
 |------------------|:---:|
-| Chest Armor      | 30.0                        |
-| Helmet           | 17.0                        |
+| Chest Armor      | 40.0                        |
+| Helmet           | 27.0                        |
 | Gloves           | 4.0                         |
 | Forearm Armor    | 8.0                         |
 | Shoes/Boots      | 5.0                         |
 | Circlet          | 1.0                         |
+
+Table 2: Armor slot - Disguise value representation
+
+</div>
+
+<div align="center">
+
+| **Amount of armor pieces**   | ** Bonus (Weight)** |
+|:------------------:|:---:|
+| >= 4      | 20.0                        |
+| >= 3           | 10.0                        |
+| >= 2           | 5.0                         |
 
 Table 2: Armor slot - Disguise value representation
 
