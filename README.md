@@ -150,13 +150,4 @@ $$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 - **Compatibility with other mods**: The plugin may conflict with mods that alter factions or armor keywords. Comprehensive mod compatibility is planned.
 
 # New Native Functions
-```
-; Dynamically add a keyword to your armor at runtime
-Bool Function AddKeywordToArmor(Armor akArmor, Keyword akKeyword) global Native
-
-; Get keyword by editor ID to be more dynamic
-Keyword Function GetKeywordByEditorID(string akKeywordName) global Native
-
-; Get all factions an actor is in
-Faction[] Function GetFactionsForActor(Actor akActor) global Native
-```
+See [Wiki](https://github.com/Dagait/TES5-TrueFactionSystem/wiki/API-Documentation) for more information.

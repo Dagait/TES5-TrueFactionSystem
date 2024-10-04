@@ -5,7 +5,7 @@
     #define M_PI 3.14159265358979323846
 #endif
 
-constexpr float DETECTION_RADIUS = 300.0f;
+constexpr float DETECTION_RADIUS = 450.0f;
 
 // Global map to store NPCs, which have recognized the player (Disguised Value the player)
 std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
@@ -15,9 +15,36 @@ PlayerDisguiseStatus playerDisguiseStatus;
 
 float GetDisguiseValueForFaction(RE::TESFaction *faction) { return playerDisguiseStatus.GetDisguiseValue(faction); }
 
-bool IsFaceCovered(RE::TESObjectARMO *armor) {
-    constexpr const char *COVERED_FACE_TAG = "npeCoveredFace";
-    return armor->HasKeywordString(COVERED_FACE_TAG);
+float GetDisguiseBonusValueForFaction(RE::TESFaction *faction) { return playerDisguiseStatus.GetBonusValue(faction); }
+
+void AddArmorSetBonus(RE::Actor *actor) {
+    for (const auto &[factionTag, factionID] : factionArmorTags) {
+        int matchingArmorPieces = 0;
+        const int totalArmorSlots = 5;
+
+        for (const auto &slot : armorSlotsSlot) {
+            RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
+            if (armor && armor->HasKeywordString(factionTag)) {
+                matchingArmorPieces++;
+            }
+        }
+
+        float bonusAmount = 0.0f;
+
+        if (matchingArmorPieces >= 4) {
+            bonusAmount = 20.0f;
+        } else if (matchingArmorPieces >= 3) {
+            bonusAmount = 10.0f;
+        } else if (matchingArmorPieces >= 2) {
+            bonusAmount = 5.0f;
+        }
+
+        // If any bonus is applied, increase the actor's ArmorRating
+        if (bonusAmount > 0.0f) {
+            RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
+            playerDisguiseStatus.SetBonusValue(faction, bonusAmount);
+        }
+    }
 }
 
 void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
@@ -32,8 +59,9 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
     for (const auto &slot : armorSlotsSlot) {
         RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
         if (armor) {
-            if (IsFaceCovered(armor)) {
+            if (armor->HasKeywordString(COVERED_FACE_TAG)) {
                 playerDisguiseStatus.SetDisguiseValue(faction, 100);
+                AddArmorSetBonus(actor);
                 return;
             }
 
@@ -46,6 +74,7 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
     disguiseValue = std::clamp(disguiseValue, 0.0f, 100.0f);
 
     playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
+    AddArmorSetBonus(actor);
 }
 
 float GetDetectionProbability(float disguiseValue) { return abs(100.0f - disguiseValue); }
@@ -64,12 +93,19 @@ bool IsInLineOfSight(RE::Actor *npc, RE::Actor *player) {
     return npc->HasLineOfSight(player->AsReference(), hasLineOfSight);
 }
 
-bool IsValidWeather(RE::TESWeather *weather) {
-    // TODO: Check if the current weather is the same as the weather we are looking for
+bool IsBadWeather(RE::TESWeather *currentWeather) {
+    // Check if the weather is rainy, foggy, or cloudy (bad for visibility)
+    if (currentWeather) {
+        if (currentWeather->data.flags & RE::TESWeather::WeatherDataFlag::kRainy ||
+            currentWeather->data.flags & RE::TESWeather::WeatherDataFlag::kCloudy ||
+            currentWeather->data.flags & RE::TESWeather::WeatherDataFlag::kSnow) {
+            return true;
+        }
+    }
     return false;
 }
 
-bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees = 90.0f) {
+bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees) {
     if (!npc || !player) {
         return false;
     }
@@ -110,15 +146,67 @@ bool IsNightTime() {
     return (currentHour >= 20.0f || currentHour <= 6.0f);
 }
 
-bool IsPlayerInDarkArea(RE::Actor *player) {
-    // TODO: Implement this function to check if the player is in a dark area
-    RE::TESObjectCELL *cell = player->GetParentCell();
-    if (cell && cell->IsInteriorCell()) {
-        return true;
+bool IsPlayerNearLightSource(RE::Actor *player, float radius) {
+    if (!player) {
+        return false;
     }
-    // TODO: Check for weather and light sources
+
+    RE::TESObjectCELL *cell = player->GetParentCell();
+    if (!cell) {
+        return false;
+    }
+
+    NiPoint3 playerPos = player->GetPosition();
+
+    cell->ForEachReferenceInRange(playerPos, radius, [&](RE::TESObjectREFR &ref) -> BSContainer::ForEachResult {
+        RE::TESObjectLIGH *lightSource = ref.As<RE::TESObjectLIGH>();
+        if (lightSource && lightSource->data.radius > 0) {
+            return BSContainer::ForEachResult::kStop;
+        }
+        return BSContainer::ForEachResult::kContinue;
+    });
+
     return false;
 }
+
+bool IsPlayerInDarkArea(RE::Actor *player) {
+    RE::TESObjectCELL *cell = player->GetParentCell();
+    if (!cell) {
+        return false;
+    }
+
+    if (cell->IsInteriorCell()) {
+        RE::INTERIOR_DATA *lightingData = cell->GetLighting();
+        float lightingLevel = lightingData->ambient.red +
+                              lightingData->ambient.green +
+                              lightingData->ambient.blue;
+
+        return lightingLevel < 150.0f;
+    } else {
+        // If exterior, check the current weather and light levels from the Sky singleton
+        RE::Sky *sky = RE::Sky::GetSingleton();
+        if (!sky) {
+            return false;
+        }
+
+        RE::TESWeather *currentWeather = sky->currentWeather;
+        if (IsBadWeather(currentWeather)) {
+            return true;
+        }
+
+        if (!IsPlayerNearLightSource(player)) {
+            return true;
+        }
+
+        float currentTime = sky->currentGameHour;
+        if (IsNightTime()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 void CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
     RE::FormID npcID = npc->GetFormID();
@@ -156,22 +244,15 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
     int levelDifference = abs(npcLevel - playerLevel);
 
     float levelFactor = 1.0f;
-    levelFactor += 0.05f * std::log(1 + levelDifference);
+    levelFactor += 0.02f * std::log(1 + levelDifference);
 
     recognitionProbability *= levelFactor;
     // End level check
 
-    if (IsNightTime()) {
-        // If it is night time and the player is not in a dark area, reduce the recognition probability
-        recognitionProbability *= 0.2f;
-    }
-    if (!IsPlayerInDarkArea(player)) {
-        // If the player is not in a dark area, reduce the recognition probability
+    if (IsPlayerInDarkArea(player)) {
         recognitionProbability *= 0.3f;
-    }
-    if (IsValidWeather(RE::Sky::GetSingleton()->currentWeather)) {
-        // If the weather is not valid, reduce the recognition probability
-        recognitionProbability *= 0.2f;
+    } else {
+        recognitionProbability += 0.2f;
     }
 
     RE::FormID npcID = npc->GetFormID();
@@ -227,7 +308,7 @@ void CheckNPCDetection(RE::Actor *player) {
             detectionFutures.push_back(std::async(std::launch::async, [&, npc]() {
                 // Iterate through factions to check disguise values
                 for (const auto &[factionName, faction] : GetRelevantFactions()) {
-                    float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
+                    float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction) + playerDisguiseStatus.GetBonusValue(faction);
 
                     if (disguiseValue > 0.0f && npc->IsInFaction(faction)) {
                         CheckHoursPassed(npc, player, faction);
@@ -248,7 +329,6 @@ void CheckNPCDetection(RE::Actor *player) {
 
                         if (NPCRecognizesPlayer(npc, player, faction)) {
                             StartCombat(npc, player, faction);
-                            // NPC detected the player
                             recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
                             return true;  // NPC detected the player
                         }

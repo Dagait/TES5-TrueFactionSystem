@@ -17,6 +17,8 @@
 
 using namespace RE;
 
+extern std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
+
 // Disguise related functions
 /**
  * @brief Calculate the disguise value for a given actor and faction.
@@ -95,7 +97,7 @@ void LoadDetectionData(SKSE::SerializationInterface* a_intfc);
  * @return true If the player is within the NPC's field of view.
  * @return false If the player is outside the field of view.
  */
-bool IsInFieldOfView(Actor* npc, Actor* player, float fieldOfViewDegrees);
+bool IsInFieldOfView(Actor* npc, Actor* player, float fieldOfViewDegrees = 90.0f);
 
 /**
  * @brief Check if the player is within the NPC's line of sight.
@@ -106,16 +108,6 @@ bool IsInFieldOfView(Actor* npc, Actor* player, float fieldOfViewDegrees);
  * @return false If the player is outside the NPC's line of sight.
  */
 bool IsInLineOfSight(Actor* npc, Actor* player);
-
-// Environmental and time checks
-/**
- * @brief Check if the current weather conditions are valid for detection.
- *
- * @param weather The current weather object.
- * @return true If the weather is valid for detection.
- * @return false If the weather reduces detection probability.
- */
-bool IsValidWeather(TESWeather* weather);
 
 /**
  * @brief Check if it is currently night time in the game.
@@ -145,3 +137,27 @@ void RemovePlayerFromAllFactions(Actor* player);
  * 
  */
 float GetDisguiseValueForFaction(RE::TESFaction* faction);
+
+/**
+ *
+ */
+float GetDisguiseBonusValueForFaction(RE::TESFaction* faction);
+
+/**
+ * @brief Check if the current weather conditions are valid for detection.
+ *
+ * @param weather The current weather object.
+ * @return true If the weather is valid for detection.
+ * @return false If the weather reduces detection probability.
+ */
+bool IsBadWeather(RE::TESWeather* currentWeather);
+
+/**
+ *
+ */
+bool IsPlayerNearLightSource(RE::Actor* player, float radius = 100.0f);
+
+/**
+ *
+ */
+void AddArmorSetBonus(RE::Actor* actor);

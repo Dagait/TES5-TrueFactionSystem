@@ -16,6 +16,19 @@ float PlayerDisguiseStatus::GetDisguiseValue(RE::TESFaction* faction) const {
     return 0.0f;
 }
 
+void PlayerDisguiseStatus::SetBonusValue(RE::TESFaction* faction, float bonus) {
+    factionDisguiseMap[faction].faction = faction;
+    factionDisguiseMap[faction].bonusValue = bonus;
+}
+
+float PlayerDisguiseStatus::GetBonusValue(RE::TESFaction* faction) const {
+    auto it = factionDisguiseMap.find(faction);
+    if (it != factionDisguiseMap.end()) {
+        return it->second.bonusValue;
+    }
+    return 0.0f;
+}
+
 void PlayerDisguiseStatus::RemoveDisguiseValue(RE::TESFaction* faction) { factionDisguiseMap.erase(faction); }
 
 void PlayerDisguiseStatus::Clear() { factionDisguiseMap.clear(); }

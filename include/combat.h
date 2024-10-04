@@ -1,7 +1,14 @@
 #pragma once
+#include "faction.h"
+#include "disguise_data.h"
+#include "disguise.h"
+
 #include "RE/C/Calendar.h"
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
+
+#include <unordered_map>
+#include <thread>
 
 /**
  * @brief Event handler for handling hit events in the game.

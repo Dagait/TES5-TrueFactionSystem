@@ -5,12 +5,18 @@ using namespace SKSE;
 using namespace RE;
 
 std::chrono::steady_clock::time_point lastCheckTime;
+std::chrono::steady_clock::time_point lastCheckDetectionTime;
+
 std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
 
 constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
+constexpr std::chrono::seconds DETECTION_INTERVAL_SECONDS(18);
 
 static EquipEventHandler g_equipEventHandler;
 static HitEventHandler g_hitEventHandler;
+
+RE::TESDataHandler *g_dataHandler = nullptr;
+std::vector<RE::TESFaction *> g_allFactions;
 
 RE::BSEventNotifyControl EquipEventHandler::ProcessEvent(const RE::TESEquipEvent *evn,
                                                          RE::BSTEventSource<RE::TESEquipEvent> *dispatcher) {
@@ -33,12 +39,16 @@ void StartBackgroundTask(Actor *player) {
             if (player && player->IsPlayerRef()) {
                 auto now = std::chrono::steady_clock::now();
                 auto elapsed = now - lastCheckTime;
+                auto elapsedDetection = now - lastCheckDetectionTime;
 
                 if (elapsed >= CHECK_INTERVAL_SECONDS) {
                     UpdateDisguiseValue(player);
-                    CheckNPCDetection(player);   
                     CheckAndReAddPlayerToFaction(player);
                     lastCheckTime = now;
+                }
+                if (elapsedDetection >= DETECTION_INTERVAL_SECONDS) {
+                    CheckNPCDetection(player);
+                    lastCheckDetectionTime = now;
                 }
             }
             std::this_thread::sleep_for(CHECK_INTERVAL_SECONDS);
@@ -70,14 +80,40 @@ RE::BSFixedString PapyrusGetFactionEditorID(RE::StaticFunctionTag *, RE::TESFact
     return GetFactionEditorID(faction);
 }
 
+float PapyrusGetDisguiseBonusValueForFaction(RE::StaticFunctionTag *, RE::TESFaction *faction) {
+    return GetDisguiseBonusValueForFaction(faction);
+}
+
+RE::BGSKeyword *PapyrusHandleAddFactionFromMCM(RE::StaticFunctionTag *, RE::TESFaction *faction) {
+    return HandleAddFactionFromMCM(faction);
+}
+
+std::vector<std::string> PapyrusGetAssignedKeywords(RE::StaticFunctionTag *) { return GetAssignedKeywords(); }
+
+std::vector<RE::TESFaction *> PapyrusGetAssignedFactions(RE::StaticFunctionTag *) { return GetAssignedFactions(); }
+
+std::vector<RE::TESFaction *> PapyrusGetAllFactions(RE::StaticFunctionTag *) { return GetAllFactions(); }
+
+bool PapyrusRemoveFactionKeywordAssignment(RE::StaticFunctionTag *, RE::BSFixedString keyword,
+                                           RE::TESFaction *faction) {
+    return RemoveFactionKeywordAssignment(keyword, faction);
+}
+
+
 // Function to bind the Papyrus function
 bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
-    vm->RegisterFunction("AddKeywordToArmor", "npeTFS_MCM", PapyrusAddKeywordToArmor);
-    vm->RegisterFunction("RemoveKeywordFromArmor", "npeTFS_MCM", PapyrusRemoveKeywordFromArmor);
-    vm->RegisterFunction("GetKeywordByEditorID", "npeTFS_MCM", PapyrusGetKeywordByEditorID);
-    vm->RegisterFunction("GetFactionsForActor", "npeTFS_MCM", PapyrusGetFactionsForActor);
-    vm->RegisterFunction("GetDisguiseValueForFaction", "npeTFS_MCM", PapyrusGetDisguiseValueForFaction);
-    vm->RegisterFunction("GetFactionEditorID", "npeTFS_MCM", PapyrusGetFactionEditorID);
+    vm->RegisterFunction("AddKeywordToArmor", "npeTFS_NativeFunctions", PapyrusAddKeywordToArmor);
+    vm->RegisterFunction("RemoveKeywordFromArmor", "npeTFS_NativeFunctions", PapyrusRemoveKeywordFromArmor);
+    vm->RegisterFunction("GetKeywordByEditorID", "npeTFS_NativeFunctions", PapyrusGetKeywordByEditorID);
+    vm->RegisterFunction("GetFactionsForActor", "npeTFS_NativeFunctions", PapyrusGetFactionsForActor);
+    vm->RegisterFunction("GetDisguiseValueForFaction", "npeTFS_NativeFunctions", PapyrusGetDisguiseValueForFaction);
+    vm->RegisterFunction("GetDisguiseBonusValueForFaction", "npeTFS_NativeFunctions", PapyrusGetDisguiseBonusValueForFaction);
+    vm->RegisterFunction("GetFactionEditorID", "npeTFS_NativeFunctions", PapyrusGetFactionEditorID);
+    vm->RegisterFunction("HandleAddFactionFromMCM", "npeTFS_NativeFunctions", PapyrusHandleAddFactionFromMCM);
+    vm->RegisterFunction("GetAllFactions", "npeTFS_NativeFunctions", PapyrusGetAllFactions);
+    vm->RegisterFunction("GetAssignedKeywords", "npeTFS_NativeFunctions", PapyrusGetAssignedKeywords);
+    vm->RegisterFunction("GetAssignedFactions", "npeTFS_NativeFunctions", PapyrusGetAssignedFactions);
+    vm->RegisterFunction("RemoveFactionKeywordAssignment", "npeTFS_NativeFunctions", PapyrusRemoveFactionKeywordAssignment);
     return true;
 }
 
@@ -91,7 +127,25 @@ void LoadCallback(SKSE::SerializationInterface *a_intfc) {
     LoadArmorKeywordDataCallback(a_intfc);
 }
 
+std::vector<RE::TESFaction *> ConvertBSTArrayToVector(const RE::BSTArray<RE::TESFaction *> &bstArray) {
+    std::vector<RE::TESFaction *> vector;
 
+    for (std::uint32_t i = 0; i < bstArray.size(); ++i) {
+        vector.push_back(bstArray[i]);
+    }
+
+    return vector;
+}
+
+void InitializeGlobalData() {
+    g_dataHandler = RE::TESDataHandler::GetSingleton();
+    if (g_dataHandler) {
+        const auto &bstFactions = g_dataHandler->GetFormArray<RE::TESFaction>();
+        g_allFactions = ConvertBSTArrayToVector(bstFactions);
+    } else {
+        RE::ConsoleLog::GetSingleton()->Print("Failed to initialize TESDataHandler.");
+    }
+}
 
 
 extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKSE::LoadInterface *skse) {
@@ -102,6 +156,8 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             RE::ConsoleLog::GetSingleton()->Print("Loading in TFS...");
+            RE::ConsoleLog::GetSingleton()->Print("Loading in all Factions...");
+            InitializeGlobalData();
 
             auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
             if (equipEventSource) {
@@ -118,11 +174,13 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
             Actor *player = PlayerCharacter::GetSingleton();
             if (player) {
                 lastCheckTime = std::chrono::steady_clock::now();
+                lastCheckDetectionTime = std::chrono::steady_clock::now();
                 StartBackgroundTask(player);
             }
 
             SKSE::GetSerializationInterface()->SetSaveCallback(SaveCallback);
             SKSE::GetSerializationInterface()->SetLoadCallback(LoadCallback);
+            RE::ConsoleLog::GetSingleton()->Print("TFS successfully loaded!");
         }
     });
 

@@ -90,18 +90,15 @@ bool RemoveKeywordFromArmor(RE::TESObjectARMO* armor, RE::BGSKeyword* keyword) {
 }
 
 
-RE::BGSKeyword* GetKeywordByEditorID(RE::BSFixedString keywordName) {
-    auto dataHandler = RE::TESDataHandler::GetSingleton();
-    if (!dataHandler) {
+RE::BGSKeyword* GetKeywordByEditorID(RE::BSFixedString keywordEditorID) {
+    if (!g_dataHandler) {
         return nullptr;
     }
-    const auto& allKeywords = dataHandler->GetFormArray<RE::BGSKeyword>();
+    const auto& allKeywords = g_dataHandler->GetFormArray<RE::BGSKeyword>();
 
-    for (RE::BGSKeyword *currentKeyword : allKeywords) {
-        if (currentKeyword) {
-            if (strcmp(keywordName.c_str(), currentKeyword->GetFormEditorID()) == 0) {
-                return currentKeyword;
-            }
+    for (RE::BGSKeyword *keyword : allKeywords) {
+        if (keyword && strcmp(keywordEditorID.c_str(), keyword->GetFormEditorID()) == 0) {
+            return keyword;
         }
     }
 

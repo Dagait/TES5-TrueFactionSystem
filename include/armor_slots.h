@@ -1,17 +1,20 @@
 #pragma once
 #include <vector>
 
+#include "main.h"
 #include "faction.h"
 #include "log.h"
 #include "RE/B/BGSBipedObjectForm.h"
 
+
+extern RE::TESDataHandler* g_dataHandler;
 /**
  * @brief Constant values for the weight of different armor pieces.
  *
  * These values represent how much each type of armor contributes to the disguise.
  */
-constexpr float CHEST_WEIGHT = 30.0f;    /// Weight for chest armor.
-constexpr float HELMET_WEIGHT = 17.0f;   /// Weight for helmet.
+constexpr float CHEST_WEIGHT = 40.0f;    /// Weight for chest armor.
+constexpr float HELMET_WEIGHT = 27.0f;   /// Weight for helmet.
 constexpr float GLOVES_WEIGHT = 4.0f;    /// Weight for gloves.
 constexpr float FOREARMS_WEIGHT = 8.0f;  /// Weight for forearm armor.
 constexpr float SHOES_WEIGHT = 5.0f;     /// Weight for shoes/boots.
@@ -42,4 +45,4 @@ bool RemoveKeywordFromArmor(RE::TESObjectARMO* armor, RE::BGSKeyword* keyword);
 /**
  *
  */
-RE::BGSKeyword* GetKeywordByEditorID(RE::BSFixedString keyword);
+RE::BGSKeyword* GetKeywordByEditorID(RE::BSFixedString keywordEditorID);
