@@ -124,8 +124,9 @@ $$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 
 1. [**SKSE64**](https://skse.silverlock.org/) (1.6.1170) must be installed.
 2. [SkyUI](https://www.nexusmods.com/skyrimspecialedition/mods/12604) must also be installed, because of the new implemented MCM.
-3. Copy all the files  into your `Skyrim Special Edition/Data/` folder.
-4. Start the game and test the plugin by wearing faction armors and approaching the corresponding faction NPCs.
+3. [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444) must also be installed.
+4. Copy all the files  into your `Skyrim Special Edition/Data/` folder.
+5. Start the game and test the plugin by wearing faction armors and approaching the corresponding faction NPCs.
 
 
 ## Usage Instructions
