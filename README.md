@@ -71,7 +71,7 @@ Table 2: Armor slot - Disguise value representation
 
 <div align="center">
 
-| **Amount of armor pieces**   | ** Bonus (Weight)** |
+| **Amount of armor pieces**   | **Bonus (Weight)** |
 |:------------------:|:---:|
 | >= 4      | 20.0                        |
 | >= 3           | 10.0                        |
