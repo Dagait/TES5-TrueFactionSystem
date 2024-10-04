@@ -77,7 +77,7 @@ Table 2: Armor slot - Disguise value representation
 | >= 3           | 10.0                        |
 | >= 2           | 5.0                         |
 
-Table 2: Armor slot - Disguise value representation
+Table 3: Armor pieces and bonus
 
 </div>
 
