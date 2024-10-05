@@ -31,6 +31,14 @@ float PlayerDisguiseStatus::GetBonusValue(RE::TESFaction* faction) const {
 
 void PlayerDisguiseStatus::RemoveDisguiseValue(RE::TESFaction* faction) { factionDisguiseMap.erase(faction); }
 
+float PlayerDisguiseStatus::GetRaceBonusValue(RE::TESFaction* faction) const {
+    auto it = factionDisguiseMap.find(faction);
+    if (it != factionDisguiseMap.end()) {
+        return it->second.bonusValue;
+    }
+    return 0.0f;
+}
+
 void PlayerDisguiseStatus::Clear() { factionDisguiseMap.clear(); }
 
 void PlayerDisguiseStatus::Save(SKSE::SerializationInterface* a_intfc) {
@@ -42,6 +50,11 @@ void PlayerDisguiseStatus::Save(SKSE::SerializationInterface* a_intfc) {
         a_intfc->WriteRecordData(&factionID, sizeof(factionID));
         a_intfc->WriteRecordData(&data.disguiseValue, sizeof(data.disguiseValue));
     }
+}
+
+void PlayerDisguiseStatus::SetRaceBonusValue(RE::TESFaction* faction, float bonus) {
+    factionDisguiseMap[faction].faction = faction;
+    factionDisguiseMap[faction].raceDisguiseBonus = bonus;
 }
 
 void PlayerDisguiseStatus::Load(SKSE::SerializationInterface* a_intfc) {

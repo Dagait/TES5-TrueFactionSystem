@@ -292,21 +292,36 @@ Function PlayerInformationPage()
 
     Faction[] playerFactions = GetFactionsForActor(player)
 
+    ; For the race bonus value, store the values
+    float raceBonusValue = 0
+
     if playerFactions.Length > 0
         int index = 0
         while index < playerFactions.Length
             Faction currentFaction = playerFactions[index]
+            float tempRaceBonusValue = 0
+            tempRaceBonusValue = GetRaceBonusValueForFaction(currentFaction)
+            if tempRaceBonusValue > 0
+                raceBonusValue = tempRaceBonusValue  
+            endif
 
             string factionEditorID = GetFactionEditorID(currentFaction)
             float disguiseValue = GetDisguiseValueForFaction(currentFaction)
             float disguiseBonusValue = GetDisguiseBonusValueForFaction(currentFaction)
-            ; Display the faction name (via Faction ID, because most factions does not have a name) and disguise value (+BonusValue)
-            AddTextOption("Faction: " + factionEditorID, Math.Floor(disguiseValue) + " (+" + Math.Floor(disguiseBonusValue) + ")")
+            ; Display the faction name (via Faction ID, because most factions does not have a name) and disguise value (+BonusValue +RaceBonusValue)
+            AddTextOption("Faction: " + factionEditorID, Math.Floor(disguiseValue) + " (+" + Math.Floor(disguiseBonusValue) + " +" + Math.Floor(tempRaceBonusValue) + ")")
             index += 1
         endWhile
     else
         AddTextOption("No Factions Found", 0)
     endif
+
+    AddEmptyOption()
+    AddEmptyOption()
+    AddHeaderOption("Player Race Bonus Value")
+    AddEmptyOption()
+    Race playerRace = player.GetRace()
+    AddTextOption("Race: " + playerRace.GetName(), Math.Floor(raceBonusValue), 0)
 endFunction
 
 Function SettingsPage()

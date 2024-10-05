@@ -27,6 +27,7 @@ set(SOURCES
     src/log.cpp
     src/armor_keyword_data.cpp
     src/actor_extensions.cpp
+    src/race.cpp
 )
 include_directories(src)
 

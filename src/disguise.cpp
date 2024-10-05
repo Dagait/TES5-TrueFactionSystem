@@ -17,8 +17,10 @@ float GetDisguiseValueForFaction(RE::TESFaction *faction) { return playerDisguis
 
 float GetDisguiseBonusValueForFaction(RE::TESFaction *faction) { return playerDisguiseStatus.GetBonusValue(faction); }
 
+float GetRaceBonusValueForFaction(RE::TESFaction *faction) { return playerDisguiseStatus.GetRaceBonusValue(faction); }
+
 void AddArmorSetBonus(RE::Actor *actor) {
-    for (const auto &[factionTag, factionID] : factionArmorTags) {
+    for (const auto &[factionTag, factionID] : factionArmorKeywords) {
         int matchingArmorPieces = 0;
         const int totalArmorSlots = 5;
 
@@ -54,6 +56,10 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
     std::string factionTag = GetTagForFaction(faction);
     if (factionTag.empty()) {
         return;
+    }
+
+    if (IsPlayerInCorrectRace(factionTag)) {
+        disguiseValue += playerDisguiseStatus.GetRaceBonusValue(faction);
     }
 
     for (const auto &slot : armorSlotsSlot) {

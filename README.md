@@ -4,6 +4,11 @@
 >
 > [![Download Latest Release](https://img.shields.io/github/v/release/Dagait/TES5-TrueFactionSystem)](https://github.com/Dagait/TES5-TrueFactionSystem/releases/latest)
 
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/11b815a0-8bae-4a8a-8f2d-9a6bc0b2d119" width="400" />
+</p>
+
+
 The **True Faction System** is an SKSE plugin for Skyrim Special Edition that allows the player to act as a member of various factions depending on the armor worn. The plugin uses dynamic faction recognition based on faction armors and adjusts NPC behavior accordingly.
 
 If you just want to do a quick test, there's a test cell where each room has its own faction NPCs. At the start, you'll find a barrel with important items for the test.
@@ -53,14 +58,26 @@ There is also an exclusive tag called "npeCoveredFace". This means that the play
 
 | **Armor Slot**   | **Disguise Value (Weight)** |
 |------------------|:---:|
-| Chest Armor      | 30.0                        |
-| Helmet           | 17.0                        |
+| Chest Armor      | 40.0                        |
+| Helmet           | 27.0                        |
 | Gloves           | 4.0                         |
 | Forearm Armor    | 8.0                         |
 | Shoes/Boots      | 5.0                         |
 | Circlet          | 1.0                         |
 
 Table 2: Armor slot - Disguise value representation
+
+</div>
+
+<div align="center">
+
+| **Amount of armor pieces**   | **Bonus (Weight)** |
+|:------------------:|:---:|
+| >= 4      | 20.0                        |
+| >= 3           | 10.0                        |
+| >= 2           | 5.0                         |
+
+Table 3: Armor pieces and bonus
 
 </div>
 
@@ -107,8 +124,9 @@ $$\theta \leq \frac{\text{fieldOfViewDegrees}}{2}$$
 
 1. [**SKSE64**](https://skse.silverlock.org/) (1.6.1170) must be installed.
 2. [SkyUI](https://www.nexusmods.com/skyrimspecialedition/mods/12604) must also be installed, because of the new implemented MCM.
-3. Copy all the files  into your `Skyrim Special Edition/Data/` folder.
-4. Start the game and test the plugin by wearing faction armors and approaching the corresponding faction NPCs.
+3. [Address Library for SKSE Plugins](https://www.nexusmods.com/skyrimspecialedition/mods/32444) must also be installed.
+4. Copy all the files  into your `Skyrim Special Edition/Data/` folder.
+5. Start the game and test the plugin by wearing faction armors and approaching the corresponding faction NPCs.
 
 
 ## Usage Instructions

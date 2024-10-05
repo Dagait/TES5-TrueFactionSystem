@@ -1,6 +1,6 @@
 #include "faction.h"
 
-std::vector<std::pair<std::string, RE::FormID>> factionArmorTags = {
+std::vector<std::pair<std::string, RE::FormID>> factionArmorKeywords = {
     {"npeBanditFaction", 0x0001BCC0},
     {"npeImperialFaction", 0x0002BF9A}, 
     {"npeBladesFaction", 0x00072834},
@@ -170,7 +170,7 @@ std::vector<RE::TESFaction *> GetFactionsByArmorTags(RE::Actor *actor) {
     for (auto slot : allArmorSlots) {
         RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot);
         if (wornArmor) {
-            for (const auto &[tag, factionID] : factionArmorTags) {
+            for (const auto &[tag, factionID] : factionArmorKeywords) {
                 if (wornArmor->HasKeywordString(tag)) {
                     RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
                     if (faction) {
@@ -192,7 +192,7 @@ RE::TESFaction *GetFactionByArmorTag(RE::Actor *actor) {
     for (auto &slot : allArmorSlots) {
         RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot);
         if (wornArmor) {
-            for (const auto &[tag, factionID] : factionArmorTags) {
+            for (const auto &[tag, factionID] : factionArmorKeywords) {
                 if (wornArmor->HasKeywordString(tag)) {
                     return RE::TESForm::LookupByID<RE::TESFaction>(factionID);
                 }
@@ -292,7 +292,7 @@ RE::BGSKeyword *AssignPredefinedKeywordToFaction(RE::TESFaction *faction) {
                 RE::DebugNotification("Found keyword!");
                 // Associate this keyword with the faction
                 assignedKeywordsMap[faction->GetFormID()] = keywordEditorID;
-                factionArmorTags.push_back({keywordEditorID, faction->GetFormID()});
+                factionArmorKeywords.push_back({keywordEditorID, faction->GetFormID()});
                 return keyword;
             } else {
                 RE::DebugNotification(("Keyword not found: " + keywordEditorID).c_str());
@@ -342,10 +342,10 @@ bool RemoveFactionKeywordAssignment(RE::BSFixedString targetKeyword, RE::TESFact
         assignedKeywordsMap.erase(it);
 
         auto removeIt = std::remove_if(
-            factionArmorTags.begin(), factionArmorTags.end(),
+            factionArmorKeywords.begin(), factionArmorKeywords.end(),
             [&targetKeyword](const std::pair<std::string, RE::FormID> &tag) { return tag.first == targetKeyword.c_str(); });
-        if (removeIt != factionArmorTags.end()) {
-            factionArmorTags.erase(removeIt, factionArmorTags.end());
+        if (removeIt != factionArmorKeywords.end()) {
+            factionArmorKeywords.erase(removeIt, factionArmorKeywords.end());
         }
         return true;
     }
