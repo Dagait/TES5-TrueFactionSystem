@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 # Set the project name and version
-project(TrueFactionSystem VERSION 0.0.1 LANGUAGES CXX)
+project(TrueFactionSystem VERSION 0.2.5 LANGUAGES CXX)
 
 # If OUTPUT_FOLDER is set, the compiled plugin will be copied to the appropriate folder
 if(DEFINED ENV{SKYRIM_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_FOLDER}/Data")
@@ -13,7 +13,7 @@ if(DEFINED ENV{SKYRIM_MODS_FOLDER} AND IS_DIRECTORY "$ENV{SKYRIM_MODS_FOLDER}")
     set(OUTPUT_FOLDER "$ENV{SKYRIM_MODS_FOLDER}/${PROJECT_NAME}")
 endif()
 
-# Find CommonLibSSE and setup the SKSE plugin
+# Find CommonLibSSE NG and setup the SKSE plugin
 find_package(CommonLibSSE CONFIG REQUIRED)
 
 # Add source files from the src directory
