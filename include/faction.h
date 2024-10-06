@@ -13,7 +13,7 @@
 
 using namespace RE;
 
-extern std::vector<std::pair<std::string, RE::FormID>> factionArmorTags;
+extern std::vector<std::pair<std::string, RE::FormID>> factionArmorKeywords;
 extern const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots;
 
 // Faction utility functions

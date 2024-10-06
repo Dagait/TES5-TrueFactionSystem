@@ -10,9 +10,10 @@
  * This contains the faction and the player's disguise value associated with it.
  */
 struct DisguiseData {
-    RE::TESFaction* faction;    /// Pointer to the faction associated with the disguise.
-    float disguiseValue;        /// The player's disguise value for the faction.
-    float bonusValue = 0.0f;    /// Bonus for armor sets
+    RE::TESFaction* faction;            /// Pointer to the faction associated with the disguise.
+    float disguiseValue;                /// The player's disguise value for the faction.
+    float bonusValue = 0.0f;            /// Bonus for armor sets
+    float raceDisguiseBonus = 0.0f;     /// Bonus for the disguise if the player is a certain race
 };
 
 /**
@@ -47,6 +48,16 @@ struct PlayerDisguiseStatus {
      * @param bonus The bonus value to assign.
      */
     void SetBonusValue(RE::TESFaction* faction, float bonus);
+
+    /**
+     * 
+     */
+    void SetRaceBonusValue(RE::TESFaction* faction, float bonus);
+
+    /**
+     *
+     */
+    float GetRaceBonusValue(RE::TESFaction* faction) const;
 
     /**
      * @brief Gets the bonus value for a given faction.

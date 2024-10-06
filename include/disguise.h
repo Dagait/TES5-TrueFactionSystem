@@ -18,6 +18,7 @@
 using namespace RE;
 
 extern std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
+extern PlayerDisguiseStatus playerDisguiseStatus;
 
 // Disguise related functions
 /**
@@ -161,3 +162,8 @@ bool IsPlayerNearLightSource(RE::Actor* player, float radius = 100.0f);
  *
  */
 void AddArmorSetBonus(RE::Actor* actor);
+
+/**
+ *
+ */
+float GetRaceBonusValueForFaction(RE::TESFaction* faction);

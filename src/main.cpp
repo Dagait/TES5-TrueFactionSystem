@@ -94,9 +94,12 @@ std::vector<RE::TESFaction *> PapyrusGetAssignedFactions(RE::StaticFunctionTag *
 
 std::vector<RE::TESFaction *> PapyrusGetAllFactions(RE::StaticFunctionTag *) { return GetAllFactions(); }
 
-bool PapyrusRemoveFactionKeywordAssignment(RE::StaticFunctionTag *, RE::BSFixedString keyword,
-                                           RE::TESFaction *faction) {
+bool PapyrusRemoveFactionKeywordAssignment(RE::StaticFunctionTag *, RE::BSFixedString keyword, RE::TESFaction *faction) {
     return RemoveFactionKeywordAssignment(keyword, faction);
+}
+
+float PapyrusGetRaceBonusValue(RE::StaticFunctionTag *, RE::TESFaction *faction) {
+    return GetRaceBonusValueForFaction(faction);
 }
 
 
@@ -114,6 +117,7 @@ bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
     vm->RegisterFunction("GetAssignedKeywords", "npeTFS_NativeFunctions", PapyrusGetAssignedKeywords);
     vm->RegisterFunction("GetAssignedFactions", "npeTFS_NativeFunctions", PapyrusGetAssignedFactions);
     vm->RegisterFunction("RemoveFactionKeywordAssignment", "npeTFS_NativeFunctions", PapyrusRemoveFactionKeywordAssignment);
+    vm->RegisterFunction("GetRaceBonusValueForFaction", "npeTFS_NativeFunctions", PapyrusGetRaceBonusValue);
     return true;
 }
 
@@ -180,6 +184,8 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
 
             SKSE::GetSerializationInterface()->SetSaveCallback(SaveCallback);
             SKSE::GetSerializationInterface()->SetLoadCallback(LoadCallback);
+
+            InitRaceDisguiseBonus();  // Only on save load (If player changes the race during runtime, it will not be updated)
             RE::ConsoleLog::GetSingleton()->Print("TFS successfully loaded!");
         }
     });

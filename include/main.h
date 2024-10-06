@@ -1,5 +1,6 @@
 #pragma once
 
+#include "race.h"
 #include "disguise.h"
 #include "faction.h"
 #include "combat.h"
