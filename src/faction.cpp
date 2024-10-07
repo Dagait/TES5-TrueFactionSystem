@@ -1,4 +1,4 @@
-#include "faction.h"
+#include "Faction.h"
 
 std::vector<std::pair<std::string, RE::FormID>> factionArmorKeywords = {
     {"npeBanditFaction", 0x0001BCC0},

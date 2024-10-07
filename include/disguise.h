@@ -1,19 +1,10 @@
 #pragma once
-#include "faction.h"
-#include "combat.h"
-#include "npc_detection_data.h"
-#include "disguise_data.h"
-#include "armor_slots.h"
+#include "Faction.h"
+#include "Combat.h"
+#include "NpcDetectionData.h"
+#include "DisguiseData.h"
+#include "ArmorSlots.h"
 
-#include <cmath>
-#include <random>
-#include <unordered_map>
-#include <future>
-#include <vector>
-#include <thread>
-
-#include "RE/Skyrim.h"
-#include "SKSE/SKSE.h"
 
 using namespace RE;
 

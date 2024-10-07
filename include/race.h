@@ -1,8 +1,8 @@
 #pragma once
 #include "RE/Skyrim.h"
 #include "SKSE/SKSE.h"
-#include "main.h"
-#include "disguise_data.h"
+#include "Main.h"
+#include "DisguiseData.h"
 
 extern RE::TESDataHandler* g_dataHandler;
 extern PlayerDisguiseStatus playerDisguiseStatus;

@@ -1,4 +1,4 @@
-#include "combat.h"
+#include "Combat.h"
 
 
 extern PlayerDisguiseStatus playerDisguiseStatus;

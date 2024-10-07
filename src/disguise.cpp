@@ -1,4 +1,4 @@
-#include "disguise.h"
+#include "Disguise.h"
 
 
 #ifndef M_PI

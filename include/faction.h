@@ -1,14 +1,7 @@
 #pragma once
-#include "disguise_data.h"
-#include "armor_slots.h"
-#include "main.h"
-
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-#include "RE/Skyrim.h"
-#include "SKSE/SKSE.h"
+#include "DisguiseData.h"
+#include "ArmorSlots.h"
+#include "Main.h"
 
 
 using namespace RE;
