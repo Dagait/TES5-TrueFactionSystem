@@ -1,6 +1,5 @@
 #include "Main.h"
 
-using namespace SKSE::log;
 using namespace SKSE::stl;
 using namespace SKSE;
 using namespace RE;
@@ -89,7 +88,7 @@ void InitializeGlobalData() {
 }
 
 void InitializeLogging() {
-    auto path = log_directory();
+    auto path = logger::log_directory();
     if (!path) {
         report_and_fail("Unable to lookup SKSE logs directory.");
     }
@@ -97,9 +96,8 @@ void InitializeLogging() {
     *path += L".log";
 
     std::shared_ptr<spdlog::logger> log;
-    log = std::make_shared<spdlog::logger>("Global",
-                                           std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true));
-    log->set_level(spdlog::level::info);
+    log = std::make_shared<spdlog::logger>("Global", std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true));
+    log->set_level(spdlog::level::debug);
 
     spdlog::set_default_logger(std::move(log));
     spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
@@ -110,8 +108,6 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
     SKSE::Init(skse);
 
     SKSE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);
-
-    spdlog::enable_backtrace(32);
 
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {

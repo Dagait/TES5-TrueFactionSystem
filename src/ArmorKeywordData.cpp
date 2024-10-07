@@ -1,5 +1,4 @@
 #include "ArmorKeywordData.h"
-#include "ArmorSlots.h"
 
 
 void SaveArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc) {

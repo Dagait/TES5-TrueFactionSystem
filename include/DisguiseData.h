@@ -1,8 +1,5 @@
 #pragma once
-#include <unordered_map>
 
-#include "RE/Skyrim.h"
-#include "SKSE/SKSE.h"
 
 /**
  * @brief Struct that holds the disguise data for a specific faction.

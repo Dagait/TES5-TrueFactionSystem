@@ -5,15 +5,6 @@
 #include "DisguiseData.h"
 #include "ArmorSlots.h"
 
-#include <cmath>
-#include <random>
-#include <unordered_map>
-#include <future>
-#include <vector>
-#include <thread>
-
-#include "RE/Skyrim.h"
-#include "SKSE/SKSE.h"
 
 using namespace RE;
 

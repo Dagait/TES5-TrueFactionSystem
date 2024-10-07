@@ -3,13 +3,6 @@
 #include "ArmorSlots.h"
 #include "Main.h"
 
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-#include "RE/Skyrim.h"
-#include "SKSE/SKSE.h"
-
 
 using namespace RE;
 

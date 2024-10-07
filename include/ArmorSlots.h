@@ -1,5 +1,4 @@
 #pragma once
-#include <vector>
 
 #include "Main.h"
 #include "Faction.h"

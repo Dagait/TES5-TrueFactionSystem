@@ -7,8 +7,6 @@
 #include "ArmorSlots.h"
 #include "ArmorKeywordData.h"
 
-#include "RE/Skyrim.h"
-#include "SKSE/SKSE.h"
 
 // Papyrus keyword and faction utility functions for Skyrim modding API
 

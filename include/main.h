@@ -11,13 +11,6 @@
 #include "RE/B/BSFixedString.h"
 
 #include "SKSE/Trampoline.h"
-#include "spdlog/sinks/basic_file_sink.h"
-#include "spdlog/spdlog.h"
-#include <thread>
-#include <chrono>
-
-#include "RE/Skyrim.h"
-#include "SKSE/SKSE.h"
 
 extern RE::TESDataHandler* g_dataHandler;
 extern std::vector<RE::TESFaction*> g_allFactions;

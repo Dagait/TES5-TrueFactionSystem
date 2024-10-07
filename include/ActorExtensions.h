@@ -1,9 +1,5 @@
 #pragma once
 
-#include "RE/Skyrim.h"
-#include "SKSE/SKSE.h"
-
-
 class NPEActor {
 public:
     explicit NPEActor(RE::Actor* a_actor);

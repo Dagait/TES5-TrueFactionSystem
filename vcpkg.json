@@ -1,8 +1,21 @@
 {
-    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-    "dependencies": [
-      "commonlibsse-ng-ae",
-      "spdlog",
-      "rapidcsv"
-    ]
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "version-string": "0.2.6",
+  "port-version": 0,
+  "license": "MIT",
+  "supports": "windows & x64",
+  "homepage": "https://github.com/Dagait/TES5-TrueFactionSystem",
+  "features": {
+    "plugin": {
+      "description": "Build the SKSE plugin.",
+      "dependencies": [
+        "articuno",
+        "commonlibsse-ng-ae"
+      ]
+    }
+
+  },
+  "default-features": [
+    "plugin"
+  ]
 }
