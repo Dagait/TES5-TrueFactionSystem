@@ -1,4 +1,4 @@
-#include "disguise_data.h"
+#include "DisguiseData.h"
 
 void PlayerDisguiseStatus::SetDisguiseValue(RE::TESFaction* faction, float value) {
     if (factionDisguiseMap.find(faction) != factionDisguiseMap.end()) {

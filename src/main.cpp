@@ -1,6 +1,7 @@
-#include "main.h"
+#include "Main.h"
 
-
+using namespace SKSE::log;
+using namespace SKSE::stl;
 using namespace SKSE;
 using namespace RE;
 
@@ -56,70 +57,6 @@ void StartBackgroundTask(Actor *player) {
     }).detach();
 }
 
-bool PapyrusAddKeywordToArmor(RE::StaticFunctionTag *, RE::TESObjectARMO *armor, RE::BGSKeyword *keyword) {
-    return AddKeywordToArmor(armor, keyword);
-}
-
-bool PapyrusRemoveKeywordFromArmor(RE::StaticFunctionTag *, RE::TESObjectARMO *armor, RE::BGSKeyword *keyword) {
-    return RemoveKeywordFromArmor(armor, keyword);
-}
-
-RE::BGSKeyword *PapyrusGetKeywordByEditorID(RE::StaticFunctionTag *, RE::BSFixedString keyword) {
-    return GetKeywordByEditorID(keyword);
-}
-
-std::vector<RE::TESFaction *> PapyrusGetFactionsForActor(RE::StaticFunctionTag *, RE::Actor *actor) {
-    return GetFactionsForActor(actor);
-}
-
-float PapyrusGetDisguiseValueForFaction(RE::StaticFunctionTag *, RE::TESFaction *faction) {
-    return GetDisguiseValueForFaction(faction);
-}
-
-RE::BSFixedString PapyrusGetFactionEditorID(RE::StaticFunctionTag *, RE::TESFaction *faction) {
-    return GetFactionEditorID(faction);
-}
-
-float PapyrusGetDisguiseBonusValueForFaction(RE::StaticFunctionTag *, RE::TESFaction *faction) {
-    return GetDisguiseBonusValueForFaction(faction);
-}
-
-RE::BGSKeyword *PapyrusHandleAddFactionFromMCM(RE::StaticFunctionTag *, RE::TESFaction *faction) {
-    return HandleAddFactionFromMCM(faction);
-}
-
-std::vector<std::string> PapyrusGetAssignedKeywords(RE::StaticFunctionTag *) { return GetAssignedKeywords(); }
-
-std::vector<RE::TESFaction *> PapyrusGetAssignedFactions(RE::StaticFunctionTag *) { return GetAssignedFactions(); }
-
-std::vector<RE::TESFaction *> PapyrusGetAllFactions(RE::StaticFunctionTag *) { return GetAllFactions(); }
-
-bool PapyrusRemoveFactionKeywordAssignment(RE::StaticFunctionTag *, RE::BSFixedString keyword, RE::TESFaction *faction) {
-    return RemoveFactionKeywordAssignment(keyword, faction);
-}
-
-float PapyrusGetRaceBonusValue(RE::StaticFunctionTag *, RE::TESFaction *faction) {
-    return GetRaceBonusValueForFaction(faction);
-}
-
-
-// Function to bind the Papyrus function
-bool RegisterPapyrusFunctions(RE::BSScript::IVirtualMachine *vm) {
-    vm->RegisterFunction("AddKeywordToArmor", "npeTFS_NativeFunctions", PapyrusAddKeywordToArmor);
-    vm->RegisterFunction("RemoveKeywordFromArmor", "npeTFS_NativeFunctions", PapyrusRemoveKeywordFromArmor);
-    vm->RegisterFunction("GetKeywordByEditorID", "npeTFS_NativeFunctions", PapyrusGetKeywordByEditorID);
-    vm->RegisterFunction("GetFactionsForActor", "npeTFS_NativeFunctions", PapyrusGetFactionsForActor);
-    vm->RegisterFunction("GetDisguiseValueForFaction", "npeTFS_NativeFunctions", PapyrusGetDisguiseValueForFaction);
-    vm->RegisterFunction("GetDisguiseBonusValueForFaction", "npeTFS_NativeFunctions", PapyrusGetDisguiseBonusValueForFaction);
-    vm->RegisterFunction("GetFactionEditorID", "npeTFS_NativeFunctions", PapyrusGetFactionEditorID);
-    vm->RegisterFunction("HandleAddFactionFromMCM", "npeTFS_NativeFunctions", PapyrusHandleAddFactionFromMCM);
-    vm->RegisterFunction("GetAllFactions", "npeTFS_NativeFunctions", PapyrusGetAllFactions);
-    vm->RegisterFunction("GetAssignedKeywords", "npeTFS_NativeFunctions", PapyrusGetAssignedKeywords);
-    vm->RegisterFunction("GetAssignedFactions", "npeTFS_NativeFunctions", PapyrusGetAssignedFactions);
-    vm->RegisterFunction("RemoveFactionKeywordAssignment", "npeTFS_NativeFunctions", PapyrusRemoveFactionKeywordAssignment);
-    vm->RegisterFunction("GetRaceBonusValueForFaction", "npeTFS_NativeFunctions", PapyrusGetRaceBonusValue);
-    return true;
-}
 
 void SaveCallback(SKSE::SerializationInterface *a_intfc) {
     // SaveDetectionData(a_intfc);
@@ -151,28 +88,49 @@ void InitializeGlobalData() {
     }
 }
 
+void InitializeLogging() {
+    auto path = log_directory();
+    if (!path) {
+        report_and_fail("Unable to lookup SKSE logs directory.");
+    }
+    *path /= PluginDeclaration::GetSingleton()->GetName();
+    *path += L".log";
+
+    std::shared_ptr<spdlog::logger> log;
+    log = std::make_shared<spdlog::logger>("Global",
+                                           std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true));
+    log->set_level(spdlog::level::info);
+
+    spdlog::set_default_logger(std::move(log));
+    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
+}
+
 
 extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKSE::LoadInterface *skse) {
     SKSE::Init(skse);
 
     SKSE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);
 
+    spdlog::enable_backtrace(32);
+
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
-            RE::ConsoleLog::GetSingleton()->Print("Loading in TFS...");
-            RE::ConsoleLog::GetSingleton()->Print("Loading in all Factions...");
+            InitializeLogging();
+            spdlog::info("Loading in TFS...");
+
+            spdlog::info("Loading in all Factions...");
             InitializeGlobalData();
 
             auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
             if (equipEventSource) {
                 equipEventSource->AddEventSink(&g_equipEventHandler);
-                RE::ConsoleLog::GetSingleton()->Print("TFS: EquipEventHandler registered!");
+                spdlog::info("EquipEventHandler registered!");
             }
 
             auto hitEventSource = RE::ScriptEventSourceHolder::GetSingleton();
             if (hitEventSource) {
                 hitEventSource->AddEventSink(&g_hitEventHandler);
-                RE::ConsoleLog::GetSingleton()->Print("TFS: HitEventHandler registered!");
+                spdlog::info("HitEventHandler registered!");
             }
 
             Actor *player = PlayerCharacter::GetSingleton();
@@ -186,6 +144,8 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
             SKSE::GetSerializationInterface()->SetLoadCallback(LoadCallback);
 
             InitRaceDisguiseBonus();  // Only on save load (If player changes the race during runtime, it will not be updated)
+            spdlog::info("TFS successfully loaded!");
+            spdlog::dump_backtrace();
             RE::ConsoleLog::GetSingleton()->Print("TFS successfully loaded!");
         }
     });

@@ -1,4 +1,4 @@
-#include "race.h"
+#include "Race.h"
 
 
 RE::TESRace *GetPlayerRace() { 

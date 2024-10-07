@@ -1,7 +1,7 @@
 #pragma once
-#include "faction.h"
-#include "disguise_data.h"
-#include "disguise.h"
+#include "Faction.h"
+#include "DisguiseData.h"
+#include "Disguise.h"
 
 #include "RE/C/Calendar.h"
 #include "RE/Skyrim.h"

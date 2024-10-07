@@ -14,7 +14,9 @@
         "commonlibsse-ng-ae",
         "commonlibsse-ng-se",
         "commonlibsse-ng-vr",
-        "commonlibsse-ng-flatrim"
+        "commonlibsse-ng-flatrim",
+        "bethesda-skyrim-scripts",
+        "skse"
       ]
     }
   ]

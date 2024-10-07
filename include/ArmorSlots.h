@@ -1,9 +1,8 @@
 #pragma once
 #include <vector>
 
-#include "main.h"
-#include "faction.h"
-#include "log.h"
+#include "Main.h"
+#include "Faction.h"
 #include "RE/B/BGSBipedObjectForm.h"
 
 

@@ -1,7 +1,7 @@
 #pragma once
-#include "disguise_data.h"
-#include "armor_slots.h"
-#include "main.h"
+#include "DisguiseData.h"
+#include "ArmorSlots.h"
+#include "Main.h"
 
 #include <string>
 #include <unordered_map>

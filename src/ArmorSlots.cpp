@@ -1,4 +1,4 @@
-#include "armor_slots.h"
+#include "ArmorSlots.h"
 
 
 const std::vector<ArmorSlot> armorSlotsSlot = {{RE::BGSBipedObjectForm::BipedObjectSlot::kBody, CHEST_WEIGHT},
