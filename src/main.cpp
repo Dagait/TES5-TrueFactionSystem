@@ -112,6 +112,7 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             InitializeLogging();
+            LoadJsonData();
             spdlog::info("Loading in TFS...");
 
             spdlog::info("Loading in all Factions...");

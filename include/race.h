@@ -7,6 +7,13 @@
 extern RE::TESDataHandler* g_dataHandler;
 extern PlayerDisguiseStatus playerDisguiseStatus;
 
+extern std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
+extern std::unordered_map<std::string, std::unordered_map<std::string, int>> raceValueData;
+
 bool IsPlayerInCorrectRace(RE::BSFixedString keyword);
 
 void InitRaceDisguiseBonus();
+
+void LoadJsonData();
+
+int GetDisguiseValueForFaction(const std::string &race, const std::string &faction);

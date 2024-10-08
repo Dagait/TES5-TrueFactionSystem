@@ -18,7 +18,8 @@ std::vector<std::pair<std::string, RE::FormID>> factionArmorKeywords = {
     {"npeWindhelmFaction", 0x000267E3},      
     {"npeWinterholdFaction", 0x00014217},  
     {"npeThalmorFaction", 0x00039F26},  
-    {"npeSilverHandFaction", 0x000AA0A4}};
+    {"npeSilverHandFaction", 0x000AA0A4},
+    {"npeThievesGuildFaction", 0x00029DA9}};
 
 // Only allow up to 20 mod added factions. I hope that's enough :D
 const std::vector<std::string> predefinedKeywords = {"npeFaction1", "npeFaction2", "npeFaction3", "npeFaction4",
@@ -34,7 +35,8 @@ static std::unordered_map<RE::FormID, std::string> factionFormIDToTagMap = {
     {0x00043599, "npeForswornFaction"},    {0x0002816C, "npeMarkarthFaction"}, {0x0002816D, "npeMorthalFaction"},
     {0x000DEED6, "npeNightingaleFaction"}, {0x0002816B, "npeRiftenFaction"},   {0x00029DB0, "npeSolitudeFaction"},
     {0x00028849, "npeStormcloaksFaction"}, {0x000267EA, "npeWhiterunFaction"}, {0x000267E3, "npeWindhelmFaction"},
-    {0x00014217, "npeWinterholdFaction"},  {0x00039F26, "npeThalmorFaction"},  {0x000AA0A4, "npeSilverHandFaction"}};
+    {0x00014217, "npeWinterholdFaction"},  {0x00039F26, "npeThalmorFaction"},  {0x000AA0A4, "npeSilverHandFaction"}, 
+    {0x00029DA9, "npeThievesGuildFaction"}};
 
 const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots = {
     RE::BGSBipedObjectForm::BipedObjectSlot::kHead,     RE::BGSBipedObjectForm::BipedObjectSlot::kBody,

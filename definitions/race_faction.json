@@ -1,0 +1,64 @@
+{
+  "factions": {
+    "npeThalmorFaction": {
+      "best_fit": [ "npeAltmerRace" ],
+      "possible": [ "npeBosmerRace", "npeKhajiitRace" ],
+      "unlikely": [ "npeDunmerRace", "npeImperialRace", "npeNordRace" ],
+      "impossible": [ "npeOrcRace", "npeBretonRace", "npeArgonianRace", "npeRedguardRace" ]
+    },
+    "npeImperialFaction": {
+      "best_fit": [ "npeImperialRace", "npeBretonRace" ],
+      "possible": [ "npeNordRace", "npeRedguardRace" ],
+      "unlikely": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace" ],
+      "impossible": [ "npeKhajiitRace", "npeArgonianRace", "npeOrcRace" ]
+    },
+    "npeStormcloaksFaction": {
+      "best_fit": [ "npeNordRace" ],
+      "possible": [ "npeImperialRace", "npeBretonRace" ],
+      "unlikely": [ "npeRedguardRace", "npeOrcRace" ],
+      "impossible": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeKhajiitRace", "npeArgonianRace" ]
+    },
+    "npeThievesGuildFaction": {
+      "best_fit": [ "npeKhajiitRace", "npeDunmerRace", "npeArgonianRace" ],
+      "possible": [ "npeImperialRace", "npeBretonRace", "npeNordRace" ],
+      "unlikely": [ "npeOrcRace", "npeRedguardRace" ],
+      "impossible": [ "npeAltmerRace", "npeBosmerRace" ]
+    },
+    "npeDarkBrotherhoodFaction": {
+      "best_fit": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeBretonRace", "npeNordRace", "npeImperialRace", "npeKhajiitRace", "npeArgonianRace", "npeOrcRace", "npeRedguardRace" ],
+      "possible": [],
+      "unlikely": [],
+      "impossible": []
+    },
+    "npeCompanionsFaction": {
+      "best_fit": [ "npeNordRace" ],
+      "possible": [ "npeImperialRace", "npeBretonRace", "npeRedguardRace" ],
+      "unlikely": [ "npeOrcRace" ],
+      "impossible": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeKhajiitRace", "npeArgonianRace" ]
+    },
+    "npeCollegeOfWinterholdFaction": {
+      "best_fit": [ "npeAltmerRace", "npeBretonRace" ],
+      "possible": [ "npeDunmerRace", "npeImperialRace" ],
+      "unlikely": [ "npeNordRace", "npeOrcRace", "npeRedguardRace", "npeKhajiitRace" ],
+      "impossible": [ "npeArgonianRace" ]
+    },
+    "npeOrcStrongholdFaction": {
+      "best_fit": [ "npeOrcRace" ],
+      "possible": [ "npeNordRace" ],
+      "unlikely": [ "npeImperialRace", "npeRedguardRace" ],
+      "impossible": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeKhajiitRace", "npeArgonianRace" ]
+    },
+    "npeForswornFaction": {
+      "best_fit": [ "npeBretonRace" ],
+      "possible": [ "npeNordRace" ],
+      "unlikely": [ "npeImperialRace", "npeRedguardRace" ],
+      "impossible": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeKhajiitRace", "npeArgonianRace", "npeOrcRace" ]
+    },
+    "npeBanditFaction": {
+      "best_fit": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeBretonRace", "npeNordRace", "npeImperialRace", "npeKhajiitRace", "npeArgonianRace", "npeOrcRace", "npeRedguardRace" ],
+      "possible": [],
+      "unlikely": [],
+      "impossible": []
+    }
+  }
+}

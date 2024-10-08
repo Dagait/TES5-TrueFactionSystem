@@ -35,6 +35,8 @@ set(HEADERS
     include/ActorExtensions.h
     include/Race.h
     include/Papyrus.h
+    include/nlohmann/json.hpp
+    include/nlohmann/json_fwd.hpp
 )
 
 # Add source files from the src directory

@@ -1,0 +1,100 @@
+{
+  "races": {
+    "npeNordRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeImperialRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeBretonRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeRedguardRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeAltmerRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeBosmerRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeDunmerRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeOrcRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeKhajiitRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeArgonianRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeVampireRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeWerewolfRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeSnowElfRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeElderRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeChildRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    },
+    "npeDremoraRace": {
+      "best_fit": 20,
+      "possible": 10,
+      "unlikely": 0,
+      "impossible": -20
+    }
+  }
+}

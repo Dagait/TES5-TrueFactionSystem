@@ -21,6 +21,7 @@
 #include <cuchar>
 #include <cwchar>
 #include <cwctype>
+#include <fstream>
 
 #include <algorithm>
 #include <any>

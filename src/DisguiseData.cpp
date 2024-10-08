@@ -34,7 +34,7 @@ void PlayerDisguiseStatus::RemoveDisguiseValue(RE::TESFaction* faction) { factio
 float PlayerDisguiseStatus::GetRaceBonusValue(RE::TESFaction* faction) const {
     auto it = factionDisguiseMap.find(faction);
     if (it != factionDisguiseMap.end()) {
-        return it->second.bonusValue;
+        return it->second.raceDisguiseBonus;
     }
     return 0.0f;
 }
