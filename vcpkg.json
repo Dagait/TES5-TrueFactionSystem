@@ -1,21 +1,38 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "true-faction-system-plugin",
+  "description": "A plugin for Skyrim Special Edition that adds a faction system based on disguises.",
   "version-string": "0.2.6",
   "port-version": 0,
-  "license": "MIT",
-  "supports": "windows & x64",
+  "license": "Apache-2.0",
   "homepage": "https://github.com/Dagait/TES5-TrueFactionSystem",
   "features": {
+    "scripts": {
+      "description": "Install Papyrus sources for this program to develop on top of it."
+    },
+    "scripts-dev": {
+      "description": "Install Papyrus sources necessary to develop scripts for this plugin.",
+      "dependencies": [
+        "bethesda-skyrim-scripts",
+        {
+          "name": "skse",
+          "default-features": false,
+          "features": [
+            "scripts"
+          ]
+        }
+      ]
+    },
     "plugin": {
       "description": "Build the SKSE plugin.",
       "dependencies": [
         "articuno",
-        "commonlibsse-ng-ae"
+        "commonlibsse-ng"
       ]
     }
-
   },
   "default-features": [
+    "scripts-dev",
     "plugin"
   ]
 }
