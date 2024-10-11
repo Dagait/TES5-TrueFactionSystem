@@ -8,6 +8,7 @@ using namespace RE;
 
 extern std::vector<std::pair<std::string, RE::FormID>> factionArmorKeywords;
 extern const std::vector<RE::BGSBipedObjectForm::BipedObjectSlot> allArmorSlots;
+extern std::unordered_map<RE::FormID, std::string> factionFormIDToTagMap;
 
 // Faction utility functions
 /**

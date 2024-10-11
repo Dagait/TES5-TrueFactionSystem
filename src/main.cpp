@@ -7,10 +7,10 @@ using namespace RE;
 std::chrono::steady_clock::time_point lastCheckTime;
 std::chrono::steady_clock::time_point lastCheckDetectionTime;
 
-std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
-
 constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
 constexpr std::chrono::seconds DETECTION_INTERVAL_SECONDS(18);
+
+std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
 
 static EquipEventHandler g_equipEventHandler;
 static HitEventHandler g_hitEventHandler;
@@ -112,7 +112,7 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             InitializeLogging();
-            LoadJsonData();
+
             spdlog::info("Loading in TFS...");
 
             spdlog::info("Loading in all Factions...");

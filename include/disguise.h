@@ -158,3 +158,7 @@ void AddArmorSetBonus(RE::Actor* actor);
  *
  */
 float GetRaceBonusValueForFaction(RE::TESFaction* faction);
+
+
+
+void ClearArmorDisguiseValues(RE::Actor* actor);

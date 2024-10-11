@@ -29,7 +29,7 @@ const std::vector<std::string> predefinedKeywords = {"npeFaction1", "npeFaction2
 
 std::unordered_map<RE::FormID, std::string> assignedKeywordsMap;
 
-static std::unordered_map<RE::FormID, std::string> factionFormIDToTagMap = {
+std::unordered_map<RE::FormID, std::string> factionFormIDToTagMap = {
     {0x0001BCC0, "npeBanditFaction"},      {0x0002BF9A, "npeImperialFaction"}, {0x00072834, "npeBladesFaction"},
     {0x00048362, "npeCompanionsFaction"},  {0x0002816E, "npeDawnstarFaction"}, {0x00028170, "npeFalkreathFaction"},
     {0x00043599, "npeForswornFaction"},    {0x0002816C, "npeMarkarthFaction"}, {0x0002816D, "npeMorthalFaction"},

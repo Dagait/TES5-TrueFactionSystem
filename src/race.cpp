@@ -83,12 +83,30 @@ RE::TESRace *GetPlayerRace() {
     return nullptr;
 }
 
-void InitRaceDisguiseBonus() { 
-    // Compare agains the factionArmorKeywords { { "npeKeyword", 0x000XXXXX }, .... }
+void InitRaceDisguiseBonus() {
+
+    LoadJsonData();
+
+    // Loop through the factionArmorKeywords to check each faction
     for (const auto &[tag, factionID] : factionArmorKeywords) {
         if (IsPlayerInCorrectRace(tag)) {
             RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
-            playerDisguiseStatus.SetRaceBonusValue(faction, raceFactionBonus);
+
+            // Get the player's race as a string
+            RE::TESRace *playerRace = GetPlayerRace();
+            if (!playerRace) return;
+
+            std::string raceEditorID = playerRace->GetFormEditorID();
+
+            // Fetch the disguise bonus for the race in this faction
+            auto factionIt = factionRaceData.find(tag);
+            if (factionIt != factionRaceData.end()) {
+                auto raceIt = factionIt->second.find(raceEditorID);
+                if (raceIt != factionIt->second.end()) {
+                    int raceFactionBonus = raceIt->second;
+                    playerDisguiseStatus.SetRaceBonusValue(faction, raceFactionBonus);
+                }
+            }
         }
     }
 }

@@ -63,9 +63,16 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
     }
 
     for (const auto &slot : armorSlotsSlot) {
+        // Get Keyword linked to the factionFormID from factionFormIDToTagMap {{factionFormID, factionKeyword},...}
+        auto it = factionFormIDToTagMap.find(faction->GetFormID());
+        if (it == factionFormIDToTagMap.end()) {
+            continue;
+        }
+        std::string factionKeyword = it->second;
+
         RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
         if (armor) {
-            if (armor->HasKeywordString(COVERED_FACE_TAG)) {
+            if (armor->HasKeywordString(COVERED_FACE_TAG) && armor->HasKeywordString(factionKeyword)) {
                 playerDisguiseStatus.SetDisguiseValue(faction, 100);
                 AddArmorSetBonus(actor);
                 return;
@@ -376,6 +383,8 @@ void UpdateDisguiseValue(Actor *actor) {
         return;
     }
 
+    ClearArmorDisguiseValues(actor);
+
     for (RE::TESFaction *faction : factions) {
         if (!faction) {
             continue;
@@ -402,6 +411,16 @@ void SaveDetectionData(SKSE::SerializationInterface *a_intfc) {
     for (auto &[npcID, detectionData] : recognizedNPCs) {
         a_intfc->WriteRecord('NPCD', 1, &npcID, sizeof(npcID));
         a_intfc->WriteRecordData(&detectionData, sizeof(detectionData));
+    }
+}
+
+void ClearArmorDisguiseValues(RE::Actor *actor) {
+    for (const auto &[factionTag, factionID] : factionArmorKeywords) {
+        RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
+        if (faction) {
+            playerDisguiseStatus.SetBonusValue(faction, 0.0f);
+            playerDisguiseStatus.SetDisguiseValue(faction, 0.0f);
+        }
     }
 }
 
