@@ -37,6 +37,7 @@ set(HEADERS
     include/Papyrus.h
     include/nlohmann/json.hpp
     include/nlohmann/json_fwd.hpp
+    include/Misc/Utils.h
 )
 
 # Add source files from the src directory
@@ -51,6 +52,7 @@ set(SOURCES
     src/ActorExtensions.cpp
     src/Race.cpp
     src/Papyrus.cpp
+    src/Misc/Utils.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/version.rc
 )
 

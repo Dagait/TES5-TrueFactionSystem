@@ -61,6 +61,7 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
     if (IsPlayerInCorrectRace(factionTag)) {
         disguiseValue += playerDisguiseStatus.GetRaceBonusValue(faction);
     }
+    disguiseValue += playerDisguiseStatus.GetBonusValue(faction);
 
     for (const auto &slot : armorSlotsSlot) {
         // Get Keyword linked to the factionFormID from factionFormIDToTagMap {{factionFormID, factionKeyword},...}

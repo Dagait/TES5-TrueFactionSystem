@@ -4,15 +4,19 @@
 
 
 const float raceFactionBonus = 15.0f;
-const std::string raceFactionFilePath = "definitions/race_faction.json";
-const std::string raceValuesFilePath = "definitions/race_values.json";
+
+const std::string raceFactionFilePath = "tfs_definitions/race_faction.json";
+const std::string raceValuesFilePath = "tfs_definitions/race_values.json";
 
 std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
 std::unordered_map<std::string, std::unordered_map<std::string, int>> raceValueData;
 
 void LoadJsonData() {
-    std::ifstream raceFactionFile(raceFactionFilePath);
-    std::ifstream raceValuesFile(raceValuesFilePath);
+    std::string dllPath = GetCurrentDLLPath();
+    dllPath = dllPath.substr(0, dllPath.find_last_of("\\/")) + "\\";
+
+    std::ifstream raceFactionFile(dllPath + raceFactionFilePath);
+    std::ifstream raceValuesFile(dllPath + raceValuesFilePath);
 
     if (!raceFactionFile.is_open() || !raceValuesFile.is_open()) {
         spdlog::error("Failed to open one of the JSON files.");
@@ -56,9 +60,13 @@ void LoadJsonData() {
 
         raceValueData[race] = fitValues;
     }
+
+    spdlog::info("Read in JSON data.");
+    spdlog::info("factionRaceData size: {}", factionRaceData.size());
+    spdlog::info("raceValueData size: {}", raceValueData.size());
 }
 
-int GetDisguiseValueForFaction(const std::string &race, const std::string &faction) {
+int RaceValueForFaction(const std::string &race, const std::string &faction) {
     // Check if faction exists
     if (factionRaceData.find(faction) == factionRaceData.end()) {
         spdlog::error("Faction not found.");
@@ -85,7 +93,9 @@ RE::TESRace *GetPlayerRace() {
 
 void InitRaceDisguiseBonus() {
 
-    LoadJsonData();
+    if (factionRaceData.empty() || raceValueData.empty()) {
+        LoadJsonData();
+    }
 
     // Loop through the factionArmorKeywords to check each faction
     for (const auto &[tag, factionID] : factionArmorKeywords) {

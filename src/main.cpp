@@ -6,9 +6,11 @@ using namespace RE;
 
 std::chrono::steady_clock::time_point lastCheckTime;
 std::chrono::steady_clock::time_point lastCheckDetectionTime;
+std::chrono::steady_clock::time_point lastRaceCheckTime;
 
 constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
 constexpr std::chrono::seconds DETECTION_INTERVAL_SECONDS(18);
+constexpr std::chrono::seconds RACE_CHECK_INTERVAL_SECONDS(30);
 
 std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
 
@@ -40,6 +42,7 @@ void StartBackgroundTask(Actor *player) {
                 auto now = std::chrono::steady_clock::now();
                 auto elapsed = now - lastCheckTime;
                 auto elapsedDetection = now - lastCheckDetectionTime;
+                auto elapsedRace = now - lastRaceCheckTime;
 
                 if (elapsed >= CHECK_INTERVAL_SECONDS) {
                     UpdateDisguiseValue(player);
@@ -49,6 +52,9 @@ void StartBackgroundTask(Actor *player) {
                 if (elapsedDetection >= DETECTION_INTERVAL_SECONDS) {
                     CheckNPCDetection(player);
                     lastCheckDetectionTime = now;
+                }
+                if (elapsedRace >= RACE_CHECK_INTERVAL_SECONDS) {
+                    InitRaceDisguiseBonus();
                 }
             }
             std::this_thread::sleep_for(CHECK_INTERVAL_SECONDS);
@@ -103,10 +109,8 @@ void InitializeLogging() {
     spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
 }
 
-
 extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKSE::LoadInterface *skse) {
     SKSE::Init(skse);
-
     SKSE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);
 
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
@@ -140,7 +144,6 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
             SKSE::GetSerializationInterface()->SetSaveCallback(SaveCallback);
             SKSE::GetSerializationInterface()->SetLoadCallback(LoadCallback);
 
-            InitRaceDisguiseBonus();  // Only on save load (If player changes the race during runtime, it will not be updated)
             spdlog::info("TFS successfully loaded!");
             spdlog::dump_backtrace();
             RE::ConsoleLog::GetSingleton()->Print("TFS successfully loaded!");
