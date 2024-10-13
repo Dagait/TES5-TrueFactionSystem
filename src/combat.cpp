@@ -1,8 +1,5 @@
 #include "Combat.h"
 
-
-extern PlayerDisguiseStatus playerDisguiseStatus;
-
 constexpr float REJOIN_COOLDOWN = 2.0f;
 
 std::unordered_map<RE::TESFaction*, float> factionCooldowns;

@@ -1,4 +1,6 @@
 #pragma once
+#include "Config.h"
+#include "Datahandler/Datahandler.h"
 #include "Actor/NPEActor.h"
 
 
@@ -13,5 +15,4 @@ public:
     void AdjustDetectionProbabilityBasedOnAlertness(NPCAlertness alertness, float &detectionProbability);
 private:
     NPCAlertnessManager() = default;
-    NPEActor npeActor;
 };

@@ -25,6 +25,8 @@ configure_file(
 
 set(HEADERS
     include/Main.h
+    include/Config.h
+    include/Datahandler/Datahandler.h
     include/Disguise.h
     include/Faction.h
     include/Combat.h
@@ -47,6 +49,7 @@ set(HEADERS
 # Add source files from the src directory
 set(SOURCES
     src/Main.cpp
+    src/Datahandler/Datahandler.cpp
     src/Disguise.cpp
     src/Faction.cpp
     src/Combat.cpp

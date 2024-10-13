@@ -1,6 +1,7 @@
 #include "Disguise/EnvironmentManager.h"
 
 
+
 bool EnvironmentManager::IsPlayerInDarkArea(RE::Actor *player) {
     RE::TESObjectCELL *cell = player->GetParentCell();
     if (!cell) {
@@ -24,7 +25,7 @@ bool EnvironmentManager::IsPlayerInDarkArea(RE::Actor *player) {
             return true;
         }
 
-        if (!IsPlayerNearLightSource(player)) {
+        if (!IsPlayerNearLightSource(player, 5.0f)) {
             return true;
         }
 

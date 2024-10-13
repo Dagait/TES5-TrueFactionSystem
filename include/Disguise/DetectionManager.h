@@ -1,5 +1,11 @@
 #pragma once
+#include "Config.h"
+#include "Datahandler/Datahandler.h"
+#include "Actor/NPEActor.h"
+
 #include "NpcDetectionData.h"
+#include "Faction.h"
+#include "Disguise/EnvironmentManager.h"
 
 
 class DetectionManager {
@@ -32,9 +38,11 @@ public:
      */
     float GetDetectionProbability(float disguiseValue);
     void CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction);
+    void StartCombat(RE::Actor *npc, RE::Actor *player, RE::TESFaction *npcFaction);
 
 private:
     DetectionManager() = default;
+    EnvironmentManager &environmentManager = EnvironmentManager::GetInstance();
     /**
      * @brief Adjust the detection probability based on distance from NPC.
      *

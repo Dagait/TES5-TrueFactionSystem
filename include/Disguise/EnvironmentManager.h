@@ -1,4 +1,7 @@
 #pragma once
+#include "Config.h"
+#include "Datahandler/Datahandler.h"
+#include "NpcDetectionData.h"
 
 
 class EnvironmentManager {
@@ -49,12 +52,11 @@ public:
      * @return true If the player is within the NPC's field of view.
      * @return false If the player is outside the field of view.
      */
-    bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees = 45.0f);
+    bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees = MAX_DETECTION_ANGLE);
     float AdjustProbabilityByDistance(float detectionProbability, float distance, float maxDistance);
     void CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction);
     float GetEnvironmentalDetectionModifier(RE::Actor *player);
 
 private:
     EnvironmentManager() = default;
-    const float DETECTION_RADIUS = 450.0f;
 };

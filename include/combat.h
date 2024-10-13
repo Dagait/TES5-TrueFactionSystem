@@ -1,6 +1,7 @@
 #pragma once
 #include "Faction.h"
 #include "DisguiseData.h"
+#include "Datahandler/DataHandler.h"
 #include "Disguise.h"
 
 #include "RE/C/Calendar.h"

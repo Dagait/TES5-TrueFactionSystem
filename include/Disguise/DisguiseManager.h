@@ -1,4 +1,6 @@
 #pragma once
+#include "Config.h"
+#include "Datahandler/Datahandler.h"
 #include "DisguiseData.h"
 #include "Faction.h"
 
@@ -20,7 +22,6 @@ public:
     float GetDisguiseBonusValueForFaction(RE::TESFaction *faction);
     float GetRaceBonusValueForFaction(RE::TESFaction *faction);
     void AddArmorSetBonus(RE::Actor *actor);
-
 private:
     DisguiseManager() = default;
     PlayerDisguiseStatus playerDisguiseStatus;

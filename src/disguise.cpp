@@ -1,18 +1,6 @@
 #include "Disguise.h"
 
 
-#ifndef M_PI
-    #define M_PI 3.14159265358979323846
-#endif
-
-constexpr float DETECTION_RADIUS = 450.0f;
-
-// Global map to store NPCs, which have recognized the player (Disguised Value the player)
-std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
-constexpr float TIME_TO_LOSE_DETECTION = 2.0f;  // 2 hours
-
-PlayerDisguiseStatus playerDisguiseStatus;
-
 float GetDisguiseValueForFaction(RE::TESFaction *faction) { return playerDisguiseStatus.GetDisguiseValue(faction); }
 
 float GetDisguiseBonusValueForFaction(RE::TESFaction *faction) { return playerDisguiseStatus.GetBonusValue(faction); }

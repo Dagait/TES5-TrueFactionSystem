@@ -34,8 +34,8 @@ void DetectionManager::CheckNPCDetection(RE::Actor *player) {
                     if (disguiseValue > 0.0f && npc->IsInFaction(faction)) {
                         CheckHoursPassed(npc, player, faction);
 
-                        bool isInLineOfSight = IsInLineOfSight(npc, player);
-                        bool isInFieldOfView = IsInFieldOfView(npc, player);
+                        bool isInLineOfSight = environmentManager.IsInLineOfSight(npc, player);
+                        bool isInFieldOfView = environmentManager.IsInFieldOfView(npc, player);
 
                         if (!isInLineOfSight && !isInFieldOfView) {
                             return false;
@@ -49,7 +49,7 @@ void DetectionManager::CheckNPCDetection(RE::Actor *player) {
                             AdjustProbabilityByDistance(detectionProbability, distance, detectionRadius);
 
                         if (NPCRecognizesPlayer(npc, player, faction)) {
-                            StartCombat(npc, player, faction);
+                            this->StartCombat(npc, player, faction);
                             recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
                             return true;  // NPC detected the player
                         }
@@ -97,7 +97,7 @@ bool DetectionManager::NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE
     recognitionProbability *= levelFactor;
     // End level check
 
-    recognitionProbability += GetEnvironmentalDetectionModifier(player);
+    recognitionProbability += environmentManager.GetEnvironmentalDetectionModifier(player);
 
     RE::FormID npcID = npc->GetFormID();
     float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
@@ -147,4 +147,15 @@ void DetectionManager::CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::T
 float DetectionManager::AdjustProbabilityByDistance(float detectionProbability, float distance, float maxDistance) {
     float distanceFactor = 1.0f / (1.0f + std::exp((distance - maxDistance) * 0.1f));
     return detectionProbability * distanceFactor;
+}
+
+void DetectionManager::StartCombat(RE::Actor *npc, RE::Actor *player, RE::TESFaction *npcFaction) {
+    // TODO: Rework
+    if (!npc || !player) {
+        return;
+    }
+
+    if (npcFaction) {
+        player->AddToFaction(npcFaction, -1);
+    }
 }

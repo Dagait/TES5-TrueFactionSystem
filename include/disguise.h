@@ -11,11 +11,9 @@
 #include "Disguise/DisguiseManager.h"
 #include "Disguise/EnvironmentManager.h"
 
+#include "Config.h"
+#include "Datahandler/DataHandler.h"
 
-using namespace RE;
-
-extern std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
-extern PlayerDisguiseStatus playerDisguiseStatus;
 
 // Disguise related functions
 /**
@@ -24,21 +22,21 @@ extern PlayerDisguiseStatus playerDisguiseStatus;
  * @param actor The actor whose disguise value is to be calculated.
  * @param faction The faction that the actor is disguising as.
  */
-void CalculateDisguiseValue(Actor* actor, TESFaction* faction);
+void CalculateDisguiseValue(RE::Actor* actor, RE::TESFaction* faction);
 
 /**
  * @brief Update the disguise value based on the actor's equipment.
  *
  * @param actor The actor whose disguise is being updated.
  */
-void UpdateDisguiseValue(Actor* actor);
+void UpdateDisguiseValue(RE::Actor* actor);
 
 /**
  * @brief Check if the player is detected by NPCs based on disguise value.
  *
  * @param actor The actor (usually the player) being detected by NPCs.
  */
-void CheckNPCDetection(Actor* actor);
+void CheckNPCDetection(RE::Actor* actor);
 
 // Detection and probability functions
 /**
@@ -68,7 +66,7 @@ float AdjustProbabilityByDistance(float detectionProbability, float distance, fl
  * @return true If the NPC recognizes the player.
  * @return false If the NPC does not recognize the player.
  */
-bool NPCRecognizesPlayer(Actor* npc, Actor* player, TESFaction* faction);
+bool NPCRecognizesPlayer(RE::Actor* npc, RE::Actor* player, RE::TESFaction* faction);
 
 // Data serialization functions
 /**
@@ -95,7 +93,7 @@ void LoadDetectionData(SKSE::SerializationInterface* a_intfc);
  * @return true If the player is within the NPC's field of view.
  * @return false If the player is outside the field of view.
  */
-bool IsInFieldOfView(Actor* npc, Actor* player, float fieldOfViewDegrees = 45.0f);
+bool IsInFieldOfView(RE::Actor* npc, RE::Actor* player, float fieldOfViewDegrees = 45.0f);
 
 /**
  * @brief Check if the player is within the NPC's line of sight.
@@ -105,7 +103,7 @@ bool IsInFieldOfView(Actor* npc, Actor* player, float fieldOfViewDegrees = 45.0f
  * @return true If the player is in the NPC's line of sight.
  * @return false If the player is outside the NPC's line of sight.
  */
-bool IsInLineOfSight(RE::Actor* npc, Actor* player);
+bool IsInLineOfSight(RE::Actor* npc, RE::Actor* player);
 
 /**
  * @brief Check if it is currently night time in the game.
@@ -122,14 +120,14 @@ bool IsNightTime();
  * @return true If the player is in a dark area.
  * @return false If the player is not in a dark area.
  */
-bool IsPlayerInDarkArea(Actor* player);
+bool IsPlayerInDarkArea(RE::Actor* player);
 
 /**
  * @brief Remove the player from all relevant factions.
  *
  * @param player The player actor.
  */
-void RemovePlayerFromAllFactions(Actor* player);
+void RemovePlayerFromAllFactions(RE::Actor* player);
 
 /**
  * 
