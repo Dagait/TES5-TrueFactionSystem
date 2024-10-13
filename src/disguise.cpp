@@ -49,7 +49,45 @@ void AddArmorSetBonus(RE::Actor *actor) {
     }
 }
 
-void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
+bool IsEliteNPC(RE::Actor *npc) {
+    if (!npc) {
+        return false;
+    }
+
+    int npcLevel = npc->GetLevel();
+    return npcLevel >= 20;
+}
+
+float GetNPCDetectionModifier(RE::Actor *npc) {
+    NPEActor npeActor(npc);
+    NPCAlertness alertness = npeActor.GetAlertness();
+    switch (alertness) {
+        case NPCAlertness::RELAXED:
+            return 0.5f;
+        case NPCAlertness::SUSPICIOUS:
+            return 1.0f;
+        case NPCAlertness::ALERTED:
+            return 2.0f;
+        default:
+            return 1.0f;
+    }
+}
+
+float GetEnvironmentalDetectionModifier(RE::Actor *player) {
+    if (IsPlayerInDarkArea(player)) {
+        return 0.5f;
+    }
+    if (IsPlayerNearLightSource(player, 5.0f)) {
+        return 1.5f;
+    }
+    return 1.0f;
+}
+
+void AdjustDetectionProbabilityBasedOnAlertness(NPCAlertness alertness, float &detectionProbability) {
+    //detectionProbability *= GetNPCDetectionModifier(alertness);
+}
+
+void CalculateDisguiseValue(RE::Actor *actor, RE::TESFaction *faction) {
     float disguiseValue = 0.0f;
     constexpr const char *COVERED_FACE_TAG = "npeCoveredFace";
 
@@ -58,12 +96,15 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
         return;
     }
 
-    if (IsPlayerInCorrectRace(factionTag)) {
-        disguiseValue += playerDisguiseStatus.GetRaceBonusValue(faction);
-    }
+    disguiseValue += playerDisguiseStatus.GetRaceBonusValue(faction);
     disguiseValue += playerDisguiseStatus.GetBonusValue(faction);
 
     for (const auto &slot : armorSlotsSlot) {
+        RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
+        if (!armor) {
+            continue;
+        }
+
         // Get Keyword linked to the factionFormID from factionFormIDToTagMap {{factionFormID, factionKeyword},...}
         auto it = factionFormIDToTagMap.find(faction->GetFormID());
         if (it == factionFormIDToTagMap.end()) {
@@ -71,17 +112,12 @@ void CalculateDisguiseValue(Actor *actor, RE::TESFaction *faction) {
         }
         std::string factionKeyword = it->second;
 
-        RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
-        if (armor) {
-            if (armor->HasKeywordString(COVERED_FACE_TAG) && armor->HasKeywordString(factionKeyword)) {
-                playerDisguiseStatus.SetDisguiseValue(faction, 100);
-                AddArmorSetBonus(actor);
-                return;
-            }
+        if (armor->HasKeywordString(COVERED_FACE_TAG) && armor->HasKeywordString(factionKeyword)) {
+            disguiseValue += 100;
+        }
 
-            if (armor->HasKeywordString(factionTag)) {
-                disguiseValue += slot.weight;
-            }
+        if (armor->HasKeywordString(factionTag)) {
+            disguiseValue += slot.weight;
         }
     }
 
@@ -145,7 +181,6 @@ bool IsInFieldOfView(RE::Actor *npc, RE::Actor *player, float fieldOfViewDegrees
     float fovFactor = std::cos((fieldOfViewDegrees / 2.0f) * (M_PI / 180.0f));
 
     if (dotProduct >= fovFactor) {
-        // Fully inside the FOV
         return true;
     } else {
         // Smooth falloff for detection outside the FOV
@@ -240,6 +275,25 @@ void CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction
     }
 }
 
+void UpdateNPCAlertness(RE::Actor *npc, bool recognizesPlayer) {
+    NPEActor npeActor(npc);
+    NPCAlertness currentAlertness = npeActor.GetAlertness();
+
+    if (recognizesPlayer) {
+        if (currentAlertness == NPCAlertness::RELAXED) {
+            npeActor.SetAlertness(NPCAlertness::SUSPICIOUS);
+        } else if (currentAlertness == NPCAlertness::SUSPICIOUS) {
+            npeActor.SetAlertness(NPCAlertness::ALERTED);
+        }
+    } else {
+        if (currentAlertness == NPCAlertness::ALERTED) {
+            npeActor.SetAlertness(NPCAlertness::SUSPICIOUS);
+        } else if (currentAlertness == NPCAlertness::SUSPICIOUS) {
+            npeActor.SetAlertness(NPCAlertness::RELAXED);
+        }
+    }
+}
+
 bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
     float playerDisguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
     float distance = abs(npc->GetPosition().GetDistance(player->GetPosition()));
@@ -263,11 +317,7 @@ bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *fact
     recognitionProbability *= levelFactor;
     // End level check
 
-    if (IsPlayerInDarkArea(player)) {
-        recognitionProbability *= 0.3f;
-    } else {
-        recognitionProbability += 0.2f;
-    }
+    recognitionProbability += GetEnvironmentalDetectionModifier(player);
 
     RE::FormID npcID = npc->GetFormID();
     float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();

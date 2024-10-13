@@ -1,0 +1,48 @@
+#pragma once
+#include "NpcDetectionData.h"
+
+
+class DetectionManager {
+public:
+    static DetectionManager &GetInstance() {
+        static DetectionManager instance;
+        return instance;
+    }
+    /**
+     * @brief Check if the player is detected by NPCs based on disguise value.
+     *
+     * @param actor The actor (usually the player) being detected by NPCs.
+     */
+    void CheckNPCDetection(RE::Actor *player);
+    /**
+     * @brief Check if an NPC recognizes the player based on faction and disguise.
+     *
+     * @param npc The NPC checking for the player.
+     * @param player The player actor.
+     * @param faction The faction being checked for disguise.
+     * @return true If the NPC recognizes the player.
+     * @return false If the NPC does not recognize the player.
+     */
+    bool NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction);
+    /**
+     * @brief Calculate the probability of detection based on disguise value.
+     *
+     * @param disguiseValue The disguise value of the actor.
+     * @return float The probability of being detected.
+     */
+    float GetDetectionProbability(float disguiseValue);
+    void CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction);
+
+private:
+    DetectionManager() = default;
+    /**
+     * @brief Adjust the detection probability based on distance from NPC.
+     *
+     * @param detectionProbability The initial detection probability.
+     * @param distance The distance between the actor and the NPC.
+     * @param maxDistance The maximum detection range.
+     * @return float The adjusted detection probability.
+     */
+    float AdjustProbabilityByDistance(float detectionProbability, float distance, float maxDistance);
+    std::unordered_map<RE::FormID, NPCDetectionData> recognizedNPCs;
+};

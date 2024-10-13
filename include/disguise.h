@@ -4,6 +4,12 @@
 #include "NpcDetectionData.h"
 #include "DisguiseData.h"
 #include "ArmorSlots.h"
+#include "Actor/NPEActor.h"
+
+#include "Disguise/NPCAlertnessManager.h"
+#include "Disguise/DetectionManager.h"
+#include "Disguise/DisguiseManager.h"
+#include "Disguise/EnvironmentManager.h"
 
 
 using namespace RE;
@@ -89,7 +95,7 @@ void LoadDetectionData(SKSE::SerializationInterface* a_intfc);
  * @return true If the player is within the NPC's field of view.
  * @return false If the player is outside the field of view.
  */
-bool IsInFieldOfView(Actor* npc, Actor* player, float fieldOfViewDegrees = 90.0f);
+bool IsInFieldOfView(Actor* npc, Actor* player, float fieldOfViewDegrees = 45.0f);
 
 /**
  * @brief Check if the player is within the NPC's line of sight.
@@ -99,7 +105,7 @@ bool IsInFieldOfView(Actor* npc, Actor* player, float fieldOfViewDegrees = 90.0f
  * @return true If the player is in the NPC's line of sight.
  * @return false If the player is outside the NPC's line of sight.
  */
-bool IsInLineOfSight(Actor* npc, Actor* player);
+bool IsInLineOfSight(RE::Actor* npc, Actor* player);
 
 /**
  * @brief Check if it is currently night time in the game.
@@ -159,6 +165,7 @@ void AddArmorSetBonus(RE::Actor* actor);
  */
 float GetRaceBonusValueForFaction(RE::TESFaction* faction);
 
-
-
+/**
+ *
+ */
 void ClearArmorDisguiseValues(RE::Actor* actor);

@@ -59,6 +59,18 @@
       "possible": [],
       "unlikely": [],
       "impossible": []
+    },
+    "npeSilverHandFaction": {
+      "best_fit": [ "npeNordRace" ],
+      "possible": [ "npeBretonRace", "npeImperialRace" ],
+      "unlikely": [ "npeRedguardRace", "npeOrcRace" ],
+      "impossible": [ "npeAltmerRace", "npeBosmerRace", "npeDunmerRace", "npeKhajiitRace", "npeArgonianRace" ]
+    },
+    "npeBladesFaction": {
+      "best_fit": [ "npeImperialRace", "npeNordRace" ],
+      "possible": [ "npeBretonRace", "npeRedguardRace" ],
+      "unlikely": [ "npeDunmerRace", "npeBosmerRace" ],
+      "impossible": [ "npeAltmerRace", "npeKhajiitRace", "npeArgonianRace", "npeOrcRace" ]
     }
   }
 }

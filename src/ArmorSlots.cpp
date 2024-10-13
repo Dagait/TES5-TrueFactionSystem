@@ -6,7 +6,9 @@ const std::vector<ArmorSlot> armorSlotsSlot = {{RE::BGSBipedObjectForm::BipedObj
                                            {RE::BGSBipedObjectForm::BipedObjectSlot::kForearms, FOREARMS_WEIGHT},
                                            {RE::BGSBipedObjectForm::BipedObjectSlot::kCirclet, CIRCLET_WEIGHT},
                                            {RE::BGSBipedObjectForm::BipedObjectSlot::kFeet, SHOES_WEIGHT},
-                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kHead, HELMET_WEIGHT}};
+                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kHead, HELMET_WEIGHT},
+                                           {RE::BGSBipedObjectForm::BipedObjectSlot::kHair, HAIR_WEIGHT}
+};
 
 bool AddKeywordToArmor(RE::TESObjectARMO* armor, RE::BGSKeyword* keyword) {
     if (!armor || !keyword) {

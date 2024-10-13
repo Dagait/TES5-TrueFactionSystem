@@ -1,5 +1,5 @@
 #include "Race.h"
-// Get this from: https://github.com/nlohmann/json
+// Get nlohmann/json from: https://github.com/nlohmann/json
 #include "nlohmann/json.hpp"
 
 
@@ -9,25 +9,21 @@ const std::string raceFactionFilePath = "tfs_definitions/race_faction.json";
 const std::string raceValuesFilePath = "tfs_definitions/race_values.json";
 
 std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
-std::unordered_map<std::string, std::unordered_map<std::string, int>> raceValueData;
 
 void LoadJsonData() {
     std::string dllPath = GetCurrentDLLPath();
     dllPath = dllPath.substr(0, dllPath.find_last_of("\\/")) + "\\";
 
     std::ifstream raceFactionFile(dllPath + raceFactionFilePath);
-    std::ifstream raceValuesFile(dllPath + raceValuesFilePath);
 
-    if (!raceFactionFile.is_open() || !raceValuesFile.is_open()) {
+    if (!raceFactionFile.is_open()) {
         spdlog::error("Failed to open one of the JSON files.");
         return;
     }
 
     nlohmann::json raceFactionJson;
-    nlohmann::json raceValuesJson;
 
     raceFactionFile >> raceFactionJson;
-    raceValuesFile >> raceValuesJson;
 
     // Parse the race-faction correlation data
     for (auto &[faction, raceList] : raceFactionJson["factions"].items()) {
@@ -42,7 +38,7 @@ void LoadJsonData() {
             else if (fitType == "unlikely")
                 value = 0;
             else if (fitType == "impossible")
-                value = -20;
+                value = -80;
 
             for (auto &race : races) {
                 raceMap[race] = value;
@@ -51,19 +47,8 @@ void LoadJsonData() {
         factionRaceData[faction] = raceMap;
     }
 
-    for (auto &[race, fitMap] : raceValuesJson["races"].items()) {
-        std::unordered_map<std::string, int> fitValues;
-        fitValues["best_fit"] = fitMap["best_fit"];
-        fitValues["possible"] = fitMap["possible"];
-        fitValues["unlikely"] = fitMap["unlikely"];
-        fitValues["impossible"] = fitMap["impossible"];
-
-        raceValueData[race] = fitValues;
-    }
-
     spdlog::info("Read in JSON data.");
     spdlog::info("factionRaceData size: {}", factionRaceData.size());
-    spdlog::info("raceValueData size: {}", raceValueData.size());
 }
 
 int RaceValueForFaction(const std::string &race, const std::string &faction) {
@@ -92,7 +77,7 @@ RE::TESRace *GetPlayerRace() {
 }
 
 void InitRaceDisguiseBonus() {
-    if (factionRaceData.empty() || raceValueData.empty()) {
+    if (factionRaceData.empty()) {
         LoadJsonData();
     }
 

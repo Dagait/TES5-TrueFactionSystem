@@ -19,7 +19,7 @@ std::vector<std::pair<std::string, RE::FormID>> factionArmorKeywords = {
     {"npeWinterholdFaction", 0x00014217},  
     {"npeThalmorFaction", 0x00039F26},  
     {"npeSilverHandFaction", 0x000AA0A4},
-    {"npeThievesGuildFaction", 0x00029DA9}};
+    {"  ", 0x00029DA9}};
 
 // Only allow up to 20 mod added factions. I hope that's enough :D
 const std::vector<std::string> predefinedKeywords = {"npeFaction1", "npeFaction2", "npeFaction3", "npeFaction4",

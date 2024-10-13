@@ -9,7 +9,6 @@
 extern RE::TESDataHandler* g_dataHandler;
 
 extern std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
-extern std::unordered_map<std::string, std::unordered_map<std::string, int>> raceValueData;
 
 bool IsPlayerInCorrectRace(RE::BSFixedString keyword);
 

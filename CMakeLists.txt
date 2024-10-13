@@ -32,12 +32,16 @@ set(HEADERS
     include/ArmorSlots.h
     include/NpcDetectionData.h
     include/ArmorKeywordData.h
-    include/ActorExtensions.h
+    include/Actor/NPEActor.h
     include/Race.h
     include/Papyrus.h
     include/nlohmann/json.hpp
     include/nlohmann/json_fwd.hpp
     include/Misc/Utils.h
+    include/Disguise/DetectionManager.h
+    include/Disguise/DisguiseManager.h
+    include/Disguise/EnvironmentManager.h
+    include/Disguise/NPCAlertnessManager.h
 )
 
 # Add source files from the src directory
@@ -49,10 +53,14 @@ set(SOURCES
     src/DisguiseData.cpp
     src/ArmorSlots.cpp
     src/ArmorKeywordData.cpp
-    src/ActorExtensions.cpp
+    src/Actor/NPEActor.cpp
     src/Race.cpp
     src/Papyrus.cpp
     src/Misc/Utils.cpp
+    src/Disguise/DetectionManager.cpp
+    src/Disguise/DisguiseManager.cpp
+    src/Disguise/EnvironmentManager.cpp
+    src/Disguise/NPCAlertnessManager.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/version.rc
 )
 
