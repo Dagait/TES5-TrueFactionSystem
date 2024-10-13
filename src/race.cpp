@@ -96,7 +96,6 @@ void InitRaceDisguiseBonus() {
         LoadJsonData();
     }
 
-    // Get the player's race
     RE::TESRace *playerRace = GetPlayerRace();
     if (!playerRace) {
         spdlog::error("Player race not found.");
@@ -106,7 +105,6 @@ void InitRaceDisguiseBonus() {
     // Retrieve the 'npe' keyword from the player's race
     std::string raceIdentifier;
 
-    // Get the race's keywords
     RE::BGSKeywordForm *keywordForm = static_cast<RE::BGSKeywordForm *>(playerRace);
     if (keywordForm) {
         bool foundNpeKeyword = false;
@@ -118,7 +116,7 @@ void InitRaceDisguiseBonus() {
                     raceIdentifier = keywordEditorID;
                     foundNpeKeyword = true;
                     spdlog::info("Found 'npe' keyword for player's race: {}", raceIdentifier);
-                    break;  // Exit loop after finding the keyword
+                    break;
                 }
             }
         }
@@ -139,7 +137,6 @@ void InitRaceDisguiseBonus() {
             continue;
         }
 
-        // Fetch the disguise bonus for the player's race in this faction
         auto factionIt = factionRaceData.find(tag);
         if (factionIt != factionRaceData.end()) {
             const auto &raceMap = factionIt->second;
@@ -150,7 +147,6 @@ void InitRaceDisguiseBonus() {
                 playerDisguiseStatus.SetRaceBonusValue(faction, raceFactionBonus);
             } else {
                 spdlog::warn("Player's race '{}' not found in faction '{}'", raceIdentifier, tag);
-                // Optionally, set a default value or handle as needed
                 playerDisguiseStatus.SetRaceBonusValue(faction, 0);
             }
         } else {
