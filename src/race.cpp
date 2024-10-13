@@ -92,34 +92,73 @@ RE::TESRace *GetPlayerRace() {
 }
 
 void InitRaceDisguiseBonus() {
-
     if (factionRaceData.empty() || raceValueData.empty()) {
         LoadJsonData();
     }
 
-    // Loop through the factionArmorKeywords to check each faction
-    for (const auto &[tag, factionID] : factionArmorKeywords) {
-        if (IsPlayerInCorrectRace(tag)) {
-            RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
+    // Get the player's race
+    RE::TESRace *playerRace = GetPlayerRace();
+    if (!playerRace) {
+        spdlog::error("Player race not found.");
+        return;
+    }
 
-            // Get the player's race as a string
-            RE::TESRace *playerRace = GetPlayerRace();
-            if (!playerRace) return;
+    // Retrieve the 'npe' keyword from the player's race
+    std::string raceIdentifier;
 
-            std::string raceEditorID = playerRace->GetFormEditorID();
-
-            // Fetch the disguise bonus for the race in this faction
-            auto factionIt = factionRaceData.find(tag);
-            if (factionIt != factionRaceData.end()) {
-                auto raceIt = factionIt->second.find(raceEditorID);
-                if (raceIt != factionIt->second.end()) {
-                    int raceFactionBonus = raceIt->second;
-                    playerDisguiseStatus.SetRaceBonusValue(faction, raceFactionBonus);
+    // Get the race's keywords
+    RE::BGSKeywordForm *keywordForm = static_cast<RE::BGSKeywordForm *>(playerRace);
+    if (keywordForm) {
+        bool foundNpeKeyword = false;
+        for (uint32_t i = 0; i < keywordForm->numKeywords; i++) {
+            RE::BGSKeyword *keyword = keywordForm->keywords[i];
+            if (keyword) {
+                std::string keywordEditorID = keyword->GetFormEditorID();
+                if (keywordEditorID.rfind("npe", 0) == 0) {  // keyword starts with 'npe'
+                    raceIdentifier = keywordEditorID;
+                    foundNpeKeyword = true;
+                    spdlog::info("Found 'npe' keyword for player's race: {}", raceIdentifier);
+                    break;  // Exit loop after finding the keyword
                 }
             }
         }
+        if (!foundNpeKeyword) {
+            spdlog::error("No 'npe' keyword found for player's race.");
+            return;
+        }
+    } else {
+        spdlog::error("Player's race does not have any keywords.");
+        return;
+    }
+
+    // Loop through all factions to initialize the race bonus value
+    for (const auto &[tag, factionID] : factionArmorKeywords) {
+        RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
+        if (!faction) {
+            spdlog::error("Faction not found for tag '{}'", tag);
+            continue;
+        }
+
+        // Fetch the disguise bonus for the player's race in this faction
+        auto factionIt = factionRaceData.find(tag);
+        if (factionIt != factionRaceData.end()) {
+            const auto &raceMap = factionIt->second;
+            auto raceIt = raceMap.find(raceIdentifier);
+            if (raceIt != raceMap.end()) {
+                int raceFactionBonus = raceIt->second;
+                spdlog::info("Setting race bonus for faction '{}' (ID: {}): {}", tag, factionID, raceFactionBonus);
+                playerDisguiseStatus.SetRaceBonusValue(faction, raceFactionBonus);
+            } else {
+                spdlog::warn("Player's race '{}' not found in faction '{}'", raceIdentifier, tag);
+                // Optionally, set a default value or handle as needed
+                playerDisguiseStatus.SetRaceBonusValue(faction, 0);
+            }
+        } else {
+            spdlog::error("Faction '{}' not found in factionRaceData.", tag);
+        }
     }
 }
+
 
 bool IsPlayerInCorrectRace(RE::BSFixedString keyword) { 
     RE::TESRace *playerRace = GetPlayerRace(); 
