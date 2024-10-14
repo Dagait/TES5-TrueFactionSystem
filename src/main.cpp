@@ -1,4 +1,6 @@
 #include "Main.h"
+#include "Globals.h"
+
 
 using namespace SKSE::stl;
 using namespace SKSE;
@@ -10,30 +12,12 @@ std::chrono::steady_clock::time_point lastRaceCheckTime;
 
 constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
 constexpr std::chrono::seconds DETECTION_INTERVAL_SECONDS(18);
-constexpr std::chrono::seconds RACE_CHECK_INTERVAL_SECONDS(30);
+constexpr std::chrono::seconds RACE_CHECK_INTERVAL_SECONDS(120);
 
-std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
-
-static EquipEventHandler g_equipEventHandler;
-static HitEventHandler g_hitEventHandler;
+static NPE::HitEventHandler g_hitEventHandler;
 
 RE::TESDataHandler *g_dataHandler = nullptr;
 std::vector<RE::TESFaction *> g_allFactions;
-
-RE::BSEventNotifyControl EquipEventHandler::ProcessEvent(const RE::TESEquipEvent *evn,
-                                                         RE::BSTEventSource<RE::TESEquipEvent> *dispatcher) {
-    if (!evn || !evn->actor) {
-        return RE::BSEventNotifyControl::kContinue;
-    }
-
-    Actor *actor = skyrim_cast<Actor*>(evn->actor.get());
-
-    if (actor && actor->IsPlayerRef()) {
-        UpdateDisguiseValue(actor);  // Update disguise value for player
-    }
-
-    return RE::BSEventNotifyControl::kContinue;
-}
 
 void StartBackgroundTask(Actor *player) {
     std::thread([player]() {
@@ -45,16 +29,16 @@ void StartBackgroundTask(Actor *player) {
                 auto elapsedRace = now - lastRaceCheckTime;
 
                 if (elapsed >= CHECK_INTERVAL_SECONDS) {
-                    UpdateDisguiseValue(player);
-                    CheckAndReAddPlayerToFaction(player);
+                    NPE::UpdateDisguiseValue(player);
+                    NPE::CheckAndReAddPlayerToFaction(player);
                     lastCheckTime = now;
                 }
                 if (elapsedDetection >= DETECTION_INTERVAL_SECONDS) {
-                    CheckNPCDetection(player);
+                    NPE::detectionManager.CheckNPCDetection(player);
                     lastCheckDetectionTime = now;
                 }
                 if (elapsedRace >= RACE_CHECK_INTERVAL_SECONDS) {
-                    InitRaceDisguiseBonus();
+                    NPE::InitRaceDisguiseBonus();
                 }
             }
             std::this_thread::sleep_for(CHECK_INTERVAL_SECONDS);
@@ -65,12 +49,12 @@ void StartBackgroundTask(Actor *player) {
 
 void SaveCallback(SKSE::SerializationInterface *a_intfc) {
     // SaveDetectionData(a_intfc);
-    SaveArmorKeywordDataCallback(a_intfc);
+    NPE::SaveArmorKeywordDataCallback(a_intfc);
 }
 
 void LoadCallback(SKSE::SerializationInterface *a_intfc) {
     // LoadDetectionData(a_intfc);
-    LoadArmorKeywordDataCallback(a_intfc);
+    NPE::LoadArmorKeywordDataCallback(a_intfc);
 }
 
 std::vector<RE::TESFaction *> ConvertBSTArrayToVector(const RE::BSTArray<RE::TESFaction *> &bstArray) {
@@ -111,7 +95,7 @@ void InitializeLogging() {
 
 extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKSE::LoadInterface *skse) {
     SKSE::Init(skse);
-    SKSE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);
+    SKSE::GetPapyrusInterface()->Register(NPE::RegisterPapyrusFunctions);
 
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
@@ -124,7 +108,7 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
 
             auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
             if (equipEventSource) {
-                equipEventSource->AddEventSink(&g_equipEventHandler);
+                equipEventSource->AddEventSink(&NPE::equipEventHandler);
                 spdlog::info("EquipEventHandler registered!");
             }
 

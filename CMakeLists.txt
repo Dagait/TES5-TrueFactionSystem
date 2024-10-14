@@ -26,7 +26,6 @@ configure_file(
 set(HEADERS
     include/Main.h
     include/Config.h
-    include/Datahandler/Datahandler.h
     include/Disguise.h
     include/Faction.h
     include/Combat.h
@@ -36,20 +35,21 @@ set(HEADERS
     include/ArmorKeywordData.h
     include/Actor/NPEActor.h
     include/Race.h
+    include/Globals.h
     include/Papyrus.h
     include/nlohmann/json.hpp
     include/nlohmann/json_fwd.hpp
     include/Misc/Utils.h
-    include/Disguise/DetectionManager.h
-    include/Disguise/DisguiseManager.h
-    include/Disguise/EnvironmentManager.h
-    include/Disguise/NPCAlertnessManager.h
+    include/Managers/DetectionManager.h
+    include/Managers/DisguiseManager.h
+    include/Managers/EnvironmentManager.h
+    include/Managers/NPCAlertnessManager.h
+    include/Managers/EquipmentManager.h
 )
 
 # Add source files from the src directory
 set(SOURCES
     src/Main.cpp
-    src/Datahandler/Datahandler.cpp
     src/Disguise.cpp
     src/Faction.cpp
     src/Combat.cpp
@@ -58,12 +58,14 @@ set(SOURCES
     src/ArmorKeywordData.cpp
     src/Actor/NPEActor.cpp
     src/Race.cpp
+    src/Globals.cpp
     src/Papyrus.cpp
     src/Misc/Utils.cpp
-    src/Disguise/DetectionManager.cpp
-    src/Disguise/DisguiseManager.cpp
-    src/Disguise/EnvironmentManager.cpp
-    src/Disguise/NPCAlertnessManager.cpp
+    src/Managers/DetectionManager.cpp
+    src/Managers/DisguiseManager.cpp
+    src/Managers/EnvironmentManager.cpp
+    src/Managers/NPCAlertnessManager.cpp
+    src/Managers/EquipmentManager.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/version.rc
 )
 

@@ -1,153 +1,145 @@
 #include "Race.h"
+#include "Globals.h"
 // Get nlohmann/json from: https://github.com/nlohmann/json
 #include "nlohmann/json.hpp"
 
 
-const float raceFactionBonus = 15.0f;
 
-const std::string raceFactionFilePath = "tfs_definitions/race_faction.json";
-const std::string raceValuesFilePath = "tfs_definitions/race_values.json";
+namespace NPE {
+    const float raceFactionBonus = 0.0f;
 
-std::unordered_map<std::string, std::unordered_map<std::string, int>> factionRaceData;
+    const std::string raceFactionFilePath = "tfs_definitions/race_faction.json";
 
-void LoadJsonData() {
-    std::string dllPath = GetCurrentDLLPath();
-    dllPath = dllPath.substr(0, dllPath.find_last_of("\\/")) + "\\";
+    void LoadJsonData() {
+        std::string dllPath = GetCurrentDLLPath();
+        dllPath = dllPath.substr(0, dllPath.find_last_of("\\/")) + "\\";
 
-    std::ifstream raceFactionFile(dllPath + raceFactionFilePath);
+        std::ifstream raceFactionFile(dllPath + raceFactionFilePath);
 
-    if (!raceFactionFile.is_open()) {
-        spdlog::error("Failed to open one of the JSON files.");
-        return;
-    }
-
-    nlohmann::json raceFactionJson;
-
-    raceFactionFile >> raceFactionJson;
-
-    // Parse the race-faction correlation data
-    for (auto &[faction, raceList] : raceFactionJson["factions"].items()) {
-        std::unordered_map<std::string, int> raceMap;
-        for (auto &[fitType, races] : raceList.items()) {
-            int value = 0;
-
-            if (fitType == "best_fit")
-                value = 20;
-            else if (fitType == "possible")
-                value = 10;
-            else if (fitType == "unlikely")
-                value = 0;
-            else if (fitType == "impossible")
-                value = -80;
-
-            for (auto &race : races) {
-                raceMap[race] = value;
-            }
+        if (!raceFactionFile.is_open()) {
+            spdlog::error("Failed to open one of the JSON files.");
+            return;
         }
-        factionRaceData[faction] = raceMap;
+
+        nlohmann::json raceFactionJson;
+
+        raceFactionFile >> raceFactionJson;
+
+        // Parse the race-faction correlation data
+        for (auto &[faction, raceList] : raceFactionJson["factions"].items()) {
+            std::unordered_map<std::string, int> raceMap;
+            for (auto &[fitType, races] : raceList.items()) {
+                int value = 0;
+
+                if (fitType == "best_fit")
+                    value = 20;
+                else if (fitType == "possible")
+                    value = 10;
+                else if (fitType == "unlikely")
+                    value = 0;
+                else if (fitType == "impossible")
+                    value = -80;
+
+                for (auto &race : races) {
+                    raceMap[race] = value;
+                }
+            }
+            factionRaceData[faction] = raceMap;
+        }
+
+        spdlog::info("Read in JSON data.");
+        spdlog::info("factionRaceData size: {}", factionRaceData.size());
     }
 
-    spdlog::info("Read in JSON data.");
-    spdlog::info("factionRaceData size: {}", factionRaceData.size());
-}
+    int RaceValueForFaction(const std::string &race, const std::string &faction) {
+        // Check if faction exists
+        if (factionRaceData.find(faction) == factionRaceData.end()) {
+            spdlog::error("Faction not found.");
+            return 0;
+        }
 
-int RaceValueForFaction(const std::string &race, const std::string &faction) {
-    // Check if faction exists
-    if (factionRaceData.find(faction) == factionRaceData.end()) {
-        spdlog::error("Faction not found.");
-        return 0;
+        // Check if the race exists within that faction's data
+        auto &raceMap = factionRaceData[faction];
+        if (raceMap.find(race) != raceMap.end()) {
+            return raceMap[race];
+        } else {
+            spdlog::error("Race not found in faction.");
+            return 0;
+        }
     }
 
-    // Check if the race exists within that faction's data
-    auto &raceMap = factionRaceData[faction];
-    if (raceMap.find(race) != raceMap.end()) {
-        return raceMap[race];
-    } else {
-        spdlog::error("Race not found in faction.");
-        return 0;
-    }
-}
-
-RE::TESRace *GetPlayerRace() { 
-	RE::PlayerCharacter *player = RE::PlayerCharacter::GetSingleton();
-    if (player) {
-        return player->GetRace();
-    }
-    return nullptr;
-}
-
-void InitRaceDisguiseBonus() {
-    if (factionRaceData.empty()) {
-        LoadJsonData();
+    RE::TESRace *GetPlayerRace() {
+        RE::PlayerCharacter *player = RE::PlayerCharacter::GetSingleton();
+        if (player) {
+            return player->GetRace();
+        }
+        return nullptr;
     }
 
-    RE::TESRace *playerRace = GetPlayerRace();
-    if (!playerRace) {
-        spdlog::error("Player race not found.");
-        return;
-    }
+    void InitRaceDisguiseBonus() {
+        if (factionRaceData.empty()) {
+            LoadJsonData();
+        }
 
-    // Retrieve the 'npe' keyword from the player's race
-    std::string raceIdentifier;
+        RE::TESRace *playerRace = GetPlayerRace();
+        if (!playerRace) {
+            spdlog::error("Player race not found.");
+            return;
+        }
 
-    RE::BGSKeywordForm *keywordForm = static_cast<RE::BGSKeywordForm *>(playerRace);
-    if (keywordForm) {
-        bool foundNpeKeyword = false;
-        for (uint32_t i = 0; i < keywordForm->numKeywords; i++) {
-            RE::BGSKeyword *keyword = keywordForm->keywords[i];
-            if (keyword) {
-                std::string keywordEditorID = keyword->GetFormEditorID();
-                if (keywordEditorID.rfind("npe", 0) == 0) {  // keyword starts with 'npe'
-                    raceIdentifier = keywordEditorID;
-                    foundNpeKeyword = true;
-                    spdlog::info("Found 'npe' keyword for player's race: {}", raceIdentifier);
-                    break;
+        // Retrieve the 'npe' keyword from the player's race
+        std::string raceIdentifier;
+
+        RE::BGSKeywordForm *keywordForm = static_cast<RE::BGSKeywordForm *>(playerRace);
+        if (keywordForm) {
+            bool foundNpeKeyword = false;
+            for (uint32_t i = 0; i < keywordForm->numKeywords; i++) {
+                RE::BGSKeyword *keyword = keywordForm->keywords[i];
+                if (keyword) {
+                    std::string keywordEditorID = keyword->GetFormEditorID();
+                    if (keywordEditorID.rfind("npe", 0) == 0) {  // keyword starts with 'npe'
+                        raceIdentifier = keywordEditorID;
+                        foundNpeKeyword = true;
+                        break;
+                    }
+                }
+            }
+            if (!foundNpeKeyword) {
+                return;
+            }
+        } else {
+            return;
+        }
+
+        // Loop through all factions to initialize the race bonus value
+        for (const auto &[tag, factionID] : factionArmorKeywords) {
+            RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
+            if (!faction) {
+                continue;
+            }
+
+            auto factionIt = factionRaceData.find(tag);
+            if (factionIt != factionRaceData.end()) {
+                const auto &raceMap = factionIt->second;
+                auto raceIt = raceMap.find(raceIdentifier);
+                if (raceIt != raceMap.end()) {
+                    int raceFactionBonus = raceIt->second;
+                    playerDisguiseStatus.SetRaceBonusValue(faction, raceFactionBonus);
+                } else {
+                    playerDisguiseStatus.SetRaceBonusValue(faction, 0);
                 }
             }
         }
-        if (!foundNpeKeyword) {
-            spdlog::error("No 'npe' keyword found for player's race.");
-            return;
-        }
-    } else {
-        spdlog::error("Player's race does not have any keywords.");
-        return;
     }
 
-    // Loop through all factions to initialize the race bonus value
-    for (const auto &[tag, factionID] : factionArmorKeywords) {
-        RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
-        if (!faction) {
-            spdlog::error("Faction not found for tag '{}'", tag);
-            continue;
-        }
-
-        auto factionIt = factionRaceData.find(tag);
-        if (factionIt != factionRaceData.end()) {
-            const auto &raceMap = factionIt->second;
-            auto raceIt = raceMap.find(raceIdentifier);
-            if (raceIt != raceMap.end()) {
-                int raceFactionBonus = raceIt->second;
-                spdlog::info("Setting race bonus for faction '{}' (ID: {}): {}", tag, factionID, raceFactionBonus);
-                playerDisguiseStatus.SetRaceBonusValue(faction, raceFactionBonus);
-            } else {
-                spdlog::warn("Player's race '{}' not found in faction '{}'", raceIdentifier, tag);
-                playerDisguiseStatus.SetRaceBonusValue(faction, 0);
+    bool IsPlayerInCorrectRace(RE::BSFixedString keyword) {
+        RE::TESRace *playerRace = GetPlayerRace();
+        RE::BGSKeyword **raceKeywords = playerRace->keywords;
+        for (uint32_t i = 0; i < playerRace->numKeywords; i++) {
+            if (raceKeywords[i]->GetFormEditorID() == keyword) {
+                return true;
             }
-        } else {
-            spdlog::error("Faction '{}' not found in factionRaceData.", tag);
         }
+        return false;
     }
-}
-
-
-bool IsPlayerInCorrectRace(RE::BSFixedString keyword) { 
-    RE::TESRace *playerRace = GetPlayerRace(); 
-    RE::BGSKeyword **raceKeywords = playerRace->keywords;
-    for (uint32_t i = 0; i < playerRace->numKeywords; i++) {
-        if (raceKeywords[i]->GetFormEditorID() == keyword) {
-            return true;
-        }
-    }
-    return false;
 }

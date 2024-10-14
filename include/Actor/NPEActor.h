@@ -1,22 +1,24 @@
 #pragma once
 
-enum class NPCAlertness { RELAXED, SUSPICIOUS, ALERTED };
+namespace NPE {
+    enum class NPCAlertness { RELAXED, SUSPICIOUS, ALERTED };
 
-class NPEActor {
-public:
-    explicit NPEActor(RE::Actor* a_actor);
+    class NPEActor {
+    public:
+        explicit NPEActor(RE::Actor* a_actor);
 
-    void StartCombatWith(RE::Actor* target);
-    bool IsHostileTo(RE::Actor* target);
-    bool IsSuspicious(); 
-    void SetHostile(RE::Actor* target);
+        void StartCombatWith(RE::Actor* target);
+        bool IsHostileTo(RE::Actor* target);
+        bool IsSuspicious();
+        void SetHostile(RE::Actor* target);
 
-    // Methods to get and set the NPC's alertness
-    NPCAlertness GetAlertness() const;
-    void SetAlertness(NPCAlertness newAlertness);
-    void UpdateAlertnessBasedOnCombat();
+        // Methods to get and set the NPC's alertness
+        NPCAlertness GetAlertness() const;
+        void SetAlertness(NPCAlertness newAlertness);
+        void UpdateAlertnessBasedOnCombat();
 
-private:
-    RE::Actor* actor;
-    NPCAlertness alertness = NPCAlertness::RELAXED;
-};
+    private:
+        RE::Actor* actor;
+        NPCAlertness alertness = NPCAlertness::RELAXED;
+    };
+}

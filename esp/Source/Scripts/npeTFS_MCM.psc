@@ -478,6 +478,7 @@ endFunction
 Function HandleAddKeywordToArmor()
     Keyword newKeyword = Game.GetFormFromFile(availableKeywordFormIDs[selectedKeywordIndex], "TrueFactionSystem.esp") as Keyword
     Debug.Notification(""+availableKeywordFormIDs[selectedKeywordIndex])
+    Debug.Notification(""+wornArmors[selectedArmorIndex].GetName())
     if AddKeywordToArmor(wornArmors[selectedArmorIndex], newKeyword)
         Debug.Notification("Keyword successfully added to: " + wornArmors[selectedArmorIndex].GetName())
     else

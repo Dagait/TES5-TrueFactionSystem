@@ -1,4 +1,6 @@
 #pragma once
 
 
-std::string GetCurrentDLLPath();
+namespace NPE {
+    std::string GetCurrentDLLPath();
+}
