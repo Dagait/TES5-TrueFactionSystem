@@ -129,12 +129,7 @@ namespace NPE {
     RE::TESFaction *GetFactionByFormID(RE::FormID *formID) { return nullptr; }
 
     std::vector<RE::TESFaction *> GetFactionsByArmorTags(RE::Actor *actor) {
-        if (!actor) {
-            return {};
-        }
-
         std::set<RE::TESFaction *> factionsSet;
-        // Get all Keywords starting with *npe*
 
         for (auto slot : armorSlotsSlot) {
             RE::TESObjectARMO *wornArmor = actor->GetWornArmor(slot.slot);

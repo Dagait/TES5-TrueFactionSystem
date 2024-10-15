@@ -59,52 +59,12 @@ namespace NPE {
         }
     }
 
-    void UpdateDisguiseValue(RE::Actor *actor) {
-        std::vector<RE::TESFaction *> factions = GetFactionsByArmorTags(actor);
-        if (factions.empty()) {
-            playerDisguiseStatus.Clear();
-            RemovePlayerFromAllFactions(actor);
-            return;
-        }
-
-        ClearArmorDisguiseValues(actor);
-
-        for (RE::TESFaction *faction : factions) {
-            if (!faction) {
-                continue;
-            }
-
-            disguiseManager.CalculateDisguiseValue(actor, faction);
-
-            float disguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
-
-            if (!actor->IsInFaction(faction) && disguiseValue > 5.0f) {
-                actor->AddToFaction(faction, 1);
-            } else {
-                if (disguiseValue <= 5.0f) {
-                    actor->AddToFaction(faction, -1);
-                    playerDisguiseStatus.RemoveDisguiseValue(faction);
-                }
-            }
-        }
-
-        detectionManager.CheckNPCDetection(actor);
-    }
+    
 
     void SaveDetectionData(SKSE::SerializationInterface *a_intfc) {
         for (auto &[npcID, detectionData] : recognizedNPCs) {
             a_intfc->WriteRecord('NPCD', 1, &npcID, sizeof(npcID));
             a_intfc->WriteRecordData(&detectionData, sizeof(detectionData));
-        }
-    }
-
-    void ClearArmorDisguiseValues(RE::Actor *actor) {
-        for (const auto &[factionTag, factionID] : factionArmorKeywords) {
-            RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
-            if (faction) {
-                playerDisguiseStatus.SetBonusValue(faction, 0.0f);
-                playerDisguiseStatus.SetDisguiseValue(faction, 0.0f);
-            }
         }
     }
 

@@ -7,15 +7,6 @@
 
 
 namespace NPE {
-    // Disguise related functions
-
-    /**
-     * @brief Update the disguise value based on the actor's equipment.
-     *
-     * @param actor The actor whose disguise is being updated.
-     */
-    void UpdateDisguiseValue(RE::Actor* actor);
-
     // Detection and probability functions
     /**
      * @brief Calculate the probability of detection based on disguise value.
@@ -51,16 +42,6 @@ namespace NPE {
     void LoadDetectionData(SKSE::SerializationInterface* a_intfc);
 
     /**
-     * @brief Check if the player is within the NPC's line of sight.
-     *
-     * @param npc The NPC whose line of sight is being checked.
-     * @param player The player actor.
-     * @return true If the player is in the NPC's line of sight.
-     * @return false If the player is outside the NPC's line of sight.
-     */
-    bool IsInLineOfSight(RE::Actor* npc, RE::Actor* player);
-
-    /**
      * @brief Remove the player from all relevant factions.
      *
      * @param player The player actor.
@@ -78,15 +59,6 @@ namespace NPE {
     float GetDisguiseBonusValueForFaction(RE::TESFaction* faction);
 
     /**
-     * @brief Check if the current weather conditions are valid for detection.
-     *
-     * @param weather The current weather object.
-     * @return true If the weather is valid for detection.
-     * @return false If the weather reduces detection probability.
-     */
-    bool IsBadWeather(RE::TESWeather* currentWeather);
-
-    /**
      *
      */
     void AddArmorSetBonus(RE::Actor* actor);
@@ -95,9 +67,4 @@ namespace NPE {
      *
      */
     float GetRaceBonusValueForFaction(RE::TESFaction* faction);
-
-    /**
-     *
-     */
-    void ClearArmorDisguiseValues(RE::Actor* actor);
 }

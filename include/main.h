@@ -11,7 +11,6 @@
 #include "SKSE/Trampoline.h"
 
 
-extern RE::TESDataHandler* g_dataHandler;
 extern std::vector<RE::TESFaction*> g_allFactions;
 
 // Function to start a background task for periodically updating disguise values and NPC detection

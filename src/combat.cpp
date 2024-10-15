@@ -63,14 +63,7 @@ namespace NPE {
         RE::Actor* target = skyrim_cast<RE::Actor*>(evn->target.get());
         RE::Actor* aggressor = skyrim_cast<RE::Actor*>(evn->cause.get());
 
-        if (target && target->IsPlayerRef() && aggressor) {
-            RE::TESFaction* faction = GetFactionByActor(aggressor);
-
-            if (faction && target->IsInFaction(faction)) {
-                target->AddToFaction(faction, -1);
-                factionCooldowns[faction] = RE::Calendar::GetSingleton()->GetHoursPassed();
-            }
-        } else if (aggressor && aggressor->IsPlayerRef() && target) {
+        if (aggressor && aggressor->IsPlayerRef() && target) {
             RE::TESFaction* faction = GetFactionByActor(target);
 
             if (faction && aggressor->IsInFaction(faction)) {

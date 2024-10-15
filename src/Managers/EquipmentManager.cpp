@@ -12,7 +12,7 @@ namespace NPE {
         RE::Actor *actor = skyrim_cast<RE::Actor *>(evn->actor.get());
 
         if (actor && actor->IsPlayerRef()) {
-            NPE::UpdateDisguiseValue(actor);  // Update disguise value for player
+            disguiseManager.UpdateDisguiseValue(actor);
         }
 
         return RE::BSEventNotifyControl::kContinue;

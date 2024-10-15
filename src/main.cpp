@@ -12,11 +12,11 @@ std::chrono::steady_clock::time_point lastRaceCheckTime;
 
 constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
 constexpr std::chrono::seconds DETECTION_INTERVAL_SECONDS(18);
-constexpr std::chrono::seconds RACE_CHECK_INTERVAL_SECONDS(120);
+constexpr std::chrono::seconds RACE_CHECK_INTERVAL_SECONDS(5);
 
 static NPE::HitEventHandler g_hitEventHandler;
 
-RE::TESDataHandler *g_dataHandler = nullptr;
+RE::TESDataHandler *g_dataHandler;
 std::vector<RE::TESFaction *> g_allFactions;
 
 void StartBackgroundTask(Actor *player) {
@@ -29,7 +29,7 @@ void StartBackgroundTask(Actor *player) {
                 auto elapsedRace = now - lastRaceCheckTime;
 
                 if (elapsed >= CHECK_INTERVAL_SECONDS) {
-                    NPE::UpdateDisguiseValue(player);
+                    NPE::disguiseManager.UpdateDisguiseValue(player);
                     NPE::CheckAndReAddPlayerToFaction(player);
                     lastCheckTime = now;
                 }
@@ -68,13 +68,11 @@ std::vector<RE::TESFaction *> ConvertBSTArrayToVector(const RE::BSTArray<RE::TES
 }
 
 void InitializeGlobalData() {
-    g_dataHandler = RE::TESDataHandler::GetSingleton();
-    if (g_dataHandler) {
-        const auto &bstFactions = g_dataHandler->GetFormArray<RE::TESFaction>();
-        g_allFactions = ConvertBSTArrayToVector(bstFactions);
-    } else {
-        RE::ConsoleLog::GetSingleton()->Print("Failed to initialize TESDataHandler.");
+    if (!g_dataHandler) {
+        g_dataHandler = RE::TESDataHandler::GetSingleton();
     }
+    const auto &bstFactions = g_dataHandler->GetFormArray<RE::TESFaction>();
+    g_allFactions = ConvertBSTArrayToVector(bstFactions);
 }
 
 void InitializeLogging() {

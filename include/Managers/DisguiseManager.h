@@ -16,12 +16,12 @@ namespace NPE {
          * @param actor The actor whose disguise value is to be calculated.
          * @param faction The faction that the actor is disguising as.
          */
-        void CalculateDisguiseValue(RE::Actor *actor, RE::TESFaction *faction);
         float GetDisguiseValueForFaction(RE::TESFaction *faction);
         float GetDisguiseBonusValueForFaction(RE::TESFaction *faction);
         float GetRaceBonusValueForFaction(RE::TESFaction *faction);
         void AddArmorSetBonus(RE::Actor *actor);
-
+        void ClearArmorDisguiseValues(RE::Actor *actor);
+        void UpdateDisguiseValue(RE::Actor *actor);
     private:
         DisguiseManager() = default;
     };
