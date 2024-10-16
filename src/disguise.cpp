@@ -13,36 +13,6 @@ namespace NPE {
         return playerDisguiseStatus.GetRaceBonusValue(faction);
     }
 
-    void AddArmorSetBonus(RE::Actor *actor) {
-        for (const auto &[factionTag, factionID] : factionArmorKeywords) {
-            int matchingArmorPieces = 0;
-            const int totalArmorSlots = 5;
-
-            for (const auto &slot : armorSlotsSlot) {
-                RE::TESObjectARMO *armor = actor->GetWornArmor(slot.slot);
-                if (armor && armor->HasKeywordString(factionTag)) {
-                    matchingArmorPieces++;
-                }
-            }
-
-            float bonusAmount = 0.0f;
-
-            if (matchingArmorPieces >= 4) {
-                bonusAmount = 20.0f;
-            } else if (matchingArmorPieces >= 3) {
-                bonusAmount = 10.0f;
-            } else if (matchingArmorPieces >= 2) {
-                bonusAmount = 5.0f;
-            }
-
-            // If any bonus is applied, increase the actor's ArmorRating
-            if (bonusAmount > 0.0f) {
-                RE::TESFaction *faction = RE::TESForm::LookupByID<RE::TESFaction>(factionID);
-                playerDisguiseStatus.SetBonusValue(faction, bonusAmount);
-            }
-        }
-    }
-
     float GetDetectionProbability(float disguiseValue) { return abs(100.0f - disguiseValue); }
 
     float AdjustProbabilityByDistance(float detectionProbability, float distance, float maxDistance) {

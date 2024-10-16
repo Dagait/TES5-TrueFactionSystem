@@ -7,12 +7,10 @@ using namespace SKSE;
 using namespace RE;
 
 std::chrono::steady_clock::time_point lastCheckTime;
+
+std::chrono::steady_clock::time_point lastUpdateDisguiseCheckTime;
 std::chrono::steady_clock::time_point lastCheckDetectionTime;
 std::chrono::steady_clock::time_point lastRaceCheckTime;
-
-constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
-constexpr std::chrono::seconds DETECTION_INTERVAL_SECONDS(18);
-constexpr std::chrono::seconds RACE_CHECK_INTERVAL_SECONDS(5);
 
 static NPE::HitEventHandler g_hitEventHandler;
 
@@ -25,23 +23,27 @@ void StartBackgroundTask(Actor *player) {
             if (player && player->IsPlayerRef()) {
                 auto now = std::chrono::steady_clock::now();
                 auto elapsed = now - lastCheckTime;
+
+                auto elapsedDisguise = now - lastUpdateDisguiseCheckTime;
                 auto elapsedDetection = now - lastCheckDetectionTime;
                 auto elapsedRace = now - lastRaceCheckTime;
 
-                if (elapsed >= CHECK_INTERVAL_SECONDS) {
+                if (elapsedDisguise >= NPE::UPDATE_DISGUISE_INTERVAL_SECONDS) {
                     NPE::disguiseManager.UpdateDisguiseValue(player);
                     NPE::CheckAndReAddPlayerToFaction(player);
-                    lastCheckTime = now;
+                    lastUpdateDisguiseCheckTime = now;
                 }
-                if (elapsedDetection >= DETECTION_INTERVAL_SECONDS) {
+                if (elapsedDetection >= NPE::DETECTION_INTERVAL_SECONDS) {
                     NPE::detectionManager.CheckNPCDetection(player);
                     lastCheckDetectionTime = now;
                 }
-                if (elapsedRace >= RACE_CHECK_INTERVAL_SECONDS) {
+                if (elapsedRace >= NPE::RACE_CHECK_INTERVAL_SECONDS) {
                     NPE::InitRaceDisguiseBonus();
+                    lastRaceCheckTime = now;
                 }
+                lastCheckTime = now;
             }
-            std::this_thread::sleep_for(CHECK_INTERVAL_SECONDS);
+            std::this_thread::sleep_for(NPE::CHECK_INTERVAL_SECONDS);
         }
     }).detach();
 }

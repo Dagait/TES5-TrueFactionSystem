@@ -11,7 +11,7 @@ namespace NPE {
      *
      * These values represent how much each type of armor contributes to the disguise.
      */
-    constexpr float CHEST_WEIGHT = 40.0f;    /// Weight for chest armor.
+    constexpr float CHEST_WEIGHT = 30.0f;    /// Weight for chest armor.
     constexpr float HELMET_WEIGHT = 18.0f;   /// Weight for helmet.
     constexpr float GLOVES_WEIGHT = 4.0f;    /// Weight for gloves.
     constexpr float FOREARMS_WEIGHT = 8.0f;  /// Weight for forearm armor.

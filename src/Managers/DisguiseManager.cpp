@@ -49,6 +49,7 @@ namespace NPE {
             }
         }
 
+        this->AddArmorSetBonus(actor);
         // Process each faction's disguise value
         for (auto &[faction, disguiseValue] : factionDisguiseValues) {
             disguiseValue += playerDisguiseStatus.GetRaceBonusValue(faction);
