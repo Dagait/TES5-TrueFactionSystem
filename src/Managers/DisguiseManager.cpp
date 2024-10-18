@@ -59,9 +59,9 @@ namespace NPE {
             playerDisguiseStatus.SetDisguiseValue(faction, disguiseValue);
 
             // Add or remove the actor from factions based on disguise value
-            if (!actor->IsInFaction(faction) && disguiseValue > 5.0f) {
+            if (!actor->IsInFaction(faction) && disguiseValue > ADD_TO_FACTION_THRESHOLD) {
                 actor->AddToFaction(faction, 1);
-            } else if (disguiseValue <= 5.0f) {
+            } else if (disguiseValue <= ADD_TO_FACTION_THRESHOLD) {
                 actor->AddToFaction(faction, -1);
                 playerDisguiseStatus.RemoveDisguiseValue(faction);
             }
