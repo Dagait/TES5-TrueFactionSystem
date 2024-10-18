@@ -28,7 +28,7 @@ namespace NPE {
                 return true;
             }
 
-            if (!IsPlayerNearLightSource(player, 5.0f)) {
+            if (!IsPlayerNearLightSource(player, 50.0f)) {
                 return true;
             }
 
@@ -70,7 +70,11 @@ namespace NPE {
         }
 
         bool hasLineOfSight = false;
-        return npc->HasLineOfSight(player->AsReference(), hasLineOfSight);
+        bool isDetected = npc->HasLineOfSight(player->AsReference(), hasLineOfSight);
+        if (isDetected) {
+            spdlog::debug("NPC has line of sight to player");
+        }
+        return isDetected;
     }
 
     bool EnvironmentManager::IsNightTime() {
@@ -93,10 +97,9 @@ namespace NPE {
             return false;
         }
 
+        // Get the NPC's rotation in radians
         float npcRotationZ = npc->data.angle.z;
-        float npcRotationZInRadians = npcRotationZ;
-
-        RE::NiPoint3 npcForward(std::cos(npcRotationZInRadians), std::sin(npcRotationZInRadians), 0.0f);
+        RE::NiPoint3 npcForward(std::cos(npcRotationZ), std::sin(npcRotationZ), 0.0f);
 
         RE::NiPoint3 npcToPlayer = player->GetPosition() - npc->GetPosition();
         float length = npcToPlayer.Length();
@@ -106,15 +109,11 @@ namespace NPE {
 
         float dotProduct = npcForward.Dot(npcToPlayer);
         dotProduct = std::clamp(dotProduct, -1.0f, 1.0f);
-        float fovFactor = std::cos((fieldOfViewDegrees / 2.0f) * (M_PI / 180.0f));
 
-        if (dotProduct >= fovFactor) {
-            return true;
-        } else {
-            // Smooth falloff for detection outside the FOV
-            float falloffFactor = std::max(0.0f, (dotProduct + 1.0f) / (1.0f - fovFactor));
-            return falloffFactor > 0.0f;
-        }
+        // Field of view factor (cosine of half of the FOV in radians)
+        float fovCosine = std::cos((fieldOfViewDegrees / 2.0f) * (M_PI / 180.0f));
+
+        return dotProduct >= fovCosine;
     }
 
     bool EnvironmentManager::IsBadWeather(RE::TESWeather *currentWeather) {

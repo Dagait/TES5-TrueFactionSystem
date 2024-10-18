@@ -39,7 +39,8 @@ namespace NPE {
         float GetDetectionProbability(float disguiseValue);
         void CheckHoursPassed(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction);
         void StartCombat(RE::Actor *npc, RE::Actor *player, RE::TESFaction *npcFaction);
-
+        void TriggerSuspiciousIdle(RE::Actor *npc);
+        bool DetectCrimeWhileDisguised(RE::Actor *npc, RE::Actor *player); 
     private:
         DetectionManager() = default;
         /**

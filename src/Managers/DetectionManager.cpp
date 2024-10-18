@@ -40,7 +40,7 @@ namespace NPE {
                             bool isInLineOfSight = environmentManager.IsInLineOfSight(npc, player);
                             bool isInFieldOfView = environmentManager.IsInFieldOfView(npc, player);
 
-                            if (!isInLineOfSight && !isInFieldOfView) {
+                            if (!isInFieldOfView) {
                                 return false;
                             }
 
@@ -51,7 +51,8 @@ namespace NPE {
                             detectionProbability =
                                 AdjustProbabilityByDistance(detectionProbability, distance, detectionRadius);
 
-                            if (NPCRecognizesPlayer(npc, player, faction)) {
+                            if (this->NPCRecognizesPlayer(npc, player, faction) ||
+                                this->DetectCrimeWhileDisguised(npc, player)) {
                                 this->StartCombat(npc, player, faction);
                                 recognizedNPCs[npc->GetFormID()] = {npc->GetFormID(), currentInGameHours};
                                 return true;  // NPC detected the player
@@ -68,7 +69,7 @@ namespace NPE {
         for (auto &future : detectionFutures) {
             if (future.get()) {
                 playerDetected = true;
-                break;  // Stop checking if the player is detected
+                break;
             }
         }
 
@@ -80,28 +81,31 @@ namespace NPE {
     bool DetectionManager::NPCRecognizesPlayer(RE::Actor *npc, RE::Actor *player, RE::TESFaction *faction) {
         float playerDisguiseValue = playerDisguiseStatus.GetDisguiseValue(faction);
         float distance = abs(npc->GetPosition().GetDistance(player->GetPosition()));
+
         if (distance > DETECTION_RADIUS) {
             return false;
         }
 
-        float recognitionProbability = (100.0f - playerDisguiseValue) / 100.0f;
+        // Calculate the base recognition probability based on disguise and distance
+        float recognitionProbability = (DETECTION_RADIUS - distance) / DETECTION_RADIUS;
+        recognitionProbability *= (100.0f - playerDisguiseValue) / 100.0f;
 
+        // Adjust by distance factor to scale probability
         float distanceFactor = 1.0f / (1.0f + std::exp((distance - DETECTION_RADIUS) * 0.1f));
         recognitionProbability *= distanceFactor;
 
-        // Level check for NPCs vs player
+        // Level difference affects detection
         int npcLevel = npc->GetLevel();
         int playerLevel = player->GetLevel();
         int levelDifference = abs(npcLevel - playerLevel);
 
-        float levelFactor = 1.0f;
-        levelFactor += 0.02f * std::log(1 + levelDifference);
-
+        float levelFactor = 1.0f + 0.02f * std::log(1 + levelDifference);
         recognitionProbability *= levelFactor;
-        // End level check
 
+        // Add any environmental modifiers for detection (lighting, sneaking, etc.)
         recognitionProbability += environmentManager.GetEnvironmentalDetectionModifier(player);
 
+        // Retrieve previous detection time for this NPC
         RE::FormID npcID = npc->GetFormID();
         float currentInGameHours = RE::Calendar::GetSingleton()->GetHoursPassed();
 
@@ -111,20 +115,62 @@ namespace NPE {
             float timeSinceLastDetected = currentInGameHours - detectionData.lastDetectedTime;
 
             if (timeSinceLastDetected < TIME_TO_LOSE_DETECTION) {
-                // If the NPC has detected the player before, increase the recognition probability
-                recognitionProbability += 0.5f;
+                recognitionProbability += 0.25f;  // NPC detected player recently, so boost detection chance
             } else {
-                // If time has passed since the last detection, reset the detection count
-                recognizedNPCs.erase(npcID);
+                recognizedNPCs.erase(npcID);  // Forget if too much time has passed
             }
         }
 
-        static thread_local std::mt19937 gen(std::random_device{}());
-        std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+        if (recognitionProbability >= 1.0f) {
+            return true;
+        }
 
-        float randomValue = dist(gen);
         recognitionProbability = std::clamp(recognitionProbability, 0.0f, 1.0f);
-        return randomValue <= recognitionProbability;
+        const float suspicionThreshold = 0.7f;
+
+        // If recognitionProbability is high but not a guaranteed detection
+        if (recognitionProbability >= suspicionThreshold) {
+            this->TriggerSuspiciousIdle(npc);
+        }
+
+        // Detection check using rng
+        if (recognitionProbability >= 0.72f) {
+            static thread_local std::mt19937 gen(std::random_device{}());
+            std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+            float randomValue = dist(gen);
+            if (randomValue <= recognitionProbability) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void DetectionManager::TriggerSuspiciousIdle(RE::Actor *npc) {
+        static RE::FormID idleFormID = 0x000977ED;  // StudyIdle for now
+    
+        RE::TESIdleForm *idleForm = RE::TESForm::LookupByID<RE::TESIdleForm>(idleFormID);
+        if (idleForm && npc) {
+            RE::stl::zstring startState = "StudyIdle";
+            RE::stl::zstring endState = "StudyIdle";
+            npc->PlayAnimation(startState, endState);
+        } else {
+            spdlog::error("Failed to play animation.");
+        }
+    }
+
+    bool DetectionManager::DetectCrimeWhileDisguised(RE::Actor* npc, RE::Actor* player) {
+        int detectionLevel = player->RequestDetectionLevel(npc);
+        bool isLockpicking = player->IsLockpick();
+        // bool isStealing = player->PickUpObject();
+
+        if (detectionLevel > 1 && isLockpicking) {
+            if (!player->IsSneaking()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     float DetectionManager::GetDetectionProbability(float disguiseValue) { return abs(100.0f - disguiseValue); }
