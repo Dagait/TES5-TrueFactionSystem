@@ -25,6 +25,7 @@ configure_file(
 
 set(HEADERS
     include/Main.h
+    include/Config.h
     include/Disguise.h
     include/Faction.h
     include/Combat.h
@@ -32,9 +33,18 @@ set(HEADERS
     include/ArmorSlots.h
     include/NpcDetectionData.h
     include/ArmorKeywordData.h
-    include/ActorExtensions.h
+    include/Actor/NPEActor.h
     include/Race.h
+    include/Globals.h
     include/Papyrus.h
+    include/nlohmann/json.hpp
+    include/nlohmann/json_fwd.hpp
+    include/Misc/Utils.h
+    include/Managers/DetectionManager.h
+    include/Managers/DisguiseManager.h
+    include/Managers/EnvironmentManager.h
+    include/Managers/NPCAlertnessManager.h
+    include/Managers/EquipmentManager.h
 )
 
 # Add source files from the src directory
@@ -46,9 +56,16 @@ set(SOURCES
     src/DisguiseData.cpp
     src/ArmorSlots.cpp
     src/ArmorKeywordData.cpp
-    src/ActorExtensions.cpp
+    src/Actor/NPEActor.cpp
     src/Race.cpp
+    src/Globals.cpp
     src/Papyrus.cpp
+    src/Misc/Utils.cpp
+    src/Managers/DetectionManager.cpp
+    src/Managers/DisguiseManager.cpp
+    src/Managers/EnvironmentManager.cpp
+    src/Managers/NPCAlertnessManager.cpp
+    src/Managers/EquipmentManager.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/version.rc
 )
 

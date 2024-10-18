@@ -1,37 +1,21 @@
 #include "Main.h"
+#include "Globals.h"
+
 
 using namespace SKSE::stl;
 using namespace SKSE;
 using namespace RE;
 
 std::chrono::steady_clock::time_point lastCheckTime;
+
+std::chrono::steady_clock::time_point lastUpdateDisguiseCheckTime;
 std::chrono::steady_clock::time_point lastCheckDetectionTime;
+std::chrono::steady_clock::time_point lastRaceCheckTime;
 
-std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
+static NPE::HitEventHandler g_hitEventHandler;
 
-constexpr std::chrono::seconds CHECK_INTERVAL_SECONDS(2);
-constexpr std::chrono::seconds DETECTION_INTERVAL_SECONDS(18);
-
-static EquipEventHandler g_equipEventHandler;
-static HitEventHandler g_hitEventHandler;
-
-RE::TESDataHandler *g_dataHandler = nullptr;
+RE::TESDataHandler *g_dataHandler;
 std::vector<RE::TESFaction *> g_allFactions;
-
-RE::BSEventNotifyControl EquipEventHandler::ProcessEvent(const RE::TESEquipEvent *evn,
-                                                         RE::BSTEventSource<RE::TESEquipEvent> *dispatcher) {
-    if (!evn || !evn->actor) {
-        return RE::BSEventNotifyControl::kContinue;
-    }
-
-    Actor *actor = skyrim_cast<Actor*>(evn->actor.get());
-
-    if (actor && actor->IsPlayerRef()) {
-        UpdateDisguiseValue(actor);  // Update disguise value for player
-    }
-
-    return RE::BSEventNotifyControl::kContinue;
-}
 
 void StartBackgroundTask(Actor *player) {
     std::thread([player]() {
@@ -39,19 +23,27 @@ void StartBackgroundTask(Actor *player) {
             if (player && player->IsPlayerRef()) {
                 auto now = std::chrono::steady_clock::now();
                 auto elapsed = now - lastCheckTime;
-                auto elapsedDetection = now - lastCheckDetectionTime;
 
-                if (elapsed >= CHECK_INTERVAL_SECONDS) {
-                    UpdateDisguiseValue(player);
-                    CheckAndReAddPlayerToFaction(player);
-                    lastCheckTime = now;
+                auto elapsedDisguise = now - lastUpdateDisguiseCheckTime;
+                auto elapsedDetection = now - lastCheckDetectionTime;
+                auto elapsedRace = now - lastRaceCheckTime;
+
+                if (elapsedDisguise >= NPE::UPDATE_DISGUISE_INTERVAL_SECONDS) {
+                    NPE::disguiseManager.UpdateDisguiseValue(player);
+                    NPE::CheckAndReAddPlayerToFaction(player);
+                    lastUpdateDisguiseCheckTime = now;
                 }
-                if (elapsedDetection >= DETECTION_INTERVAL_SECONDS) {
-                    CheckNPCDetection(player);
+                if (elapsedDetection >= NPE::DETECTION_INTERVAL_SECONDS) {
+                    NPE::detectionManager.CheckNPCDetection(player);
                     lastCheckDetectionTime = now;
                 }
+                if (elapsedRace >= NPE::RACE_CHECK_INTERVAL_SECONDS) {
+                    NPE::InitRaceDisguiseBonus();
+                    lastRaceCheckTime = now;
+                }
+                lastCheckTime = now;
             }
-            std::this_thread::sleep_for(CHECK_INTERVAL_SECONDS);
+            std::this_thread::sleep_for(NPE::CHECK_INTERVAL_SECONDS);
         }
     }).detach();
 }
@@ -59,12 +51,12 @@ void StartBackgroundTask(Actor *player) {
 
 void SaveCallback(SKSE::SerializationInterface *a_intfc) {
     // SaveDetectionData(a_intfc);
-    SaveArmorKeywordDataCallback(a_intfc);
+    NPE::SaveArmorKeywordDataCallback(a_intfc);
 }
 
 void LoadCallback(SKSE::SerializationInterface *a_intfc) {
     // LoadDetectionData(a_intfc);
-    LoadArmorKeywordDataCallback(a_intfc);
+    NPE::LoadArmorKeywordDataCallback(a_intfc);
 }
 
 std::vector<RE::TESFaction *> ConvertBSTArrayToVector(const RE::BSTArray<RE::TESFaction *> &bstArray) {
@@ -78,13 +70,11 @@ std::vector<RE::TESFaction *> ConvertBSTArrayToVector(const RE::BSTArray<RE::TES
 }
 
 void InitializeGlobalData() {
-    g_dataHandler = RE::TESDataHandler::GetSingleton();
-    if (g_dataHandler) {
-        const auto &bstFactions = g_dataHandler->GetFormArray<RE::TESFaction>();
-        g_allFactions = ConvertBSTArrayToVector(bstFactions);
-    } else {
-        RE::ConsoleLog::GetSingleton()->Print("Failed to initialize TESDataHandler.");
+    if (!g_dataHandler) {
+        g_dataHandler = RE::TESDataHandler::GetSingleton();
     }
+    const auto &bstFactions = g_dataHandler->GetFormArray<RE::TESFaction>();
+    g_allFactions = ConvertBSTArrayToVector(bstFactions);
 }
 
 void InitializeLogging() {
@@ -103,15 +93,14 @@ void InitializeLogging() {
     spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [%t] [%s:%#] %v");
 }
 
-
 extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKSE::LoadInterface *skse) {
     SKSE::Init(skse);
-
-    SKSE::GetPapyrusInterface()->Register(RegisterPapyrusFunctions);
+    SKSE::GetPapyrusInterface()->Register(NPE::RegisterPapyrusFunctions);
 
     SKSE::GetMessagingInterface()->RegisterListener([](SKSE::MessagingInterface::Message *message) {
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             InitializeLogging();
+
             spdlog::info("Loading in TFS...");
 
             spdlog::info("Loading in all Factions...");
@@ -119,7 +108,7 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
 
             auto equipEventSource = RE::ScriptEventSourceHolder::GetSingleton();
             if (equipEventSource) {
-                equipEventSource->AddEventSink(&g_equipEventHandler);
+                equipEventSource->AddEventSink(&NPE::equipEventHandler);
                 spdlog::info("EquipEventHandler registered!");
             }
 
@@ -139,7 +128,6 @@ extern "C" [[maybe_unused]] __declspec(dllexport) bool SKSEPlugin_Load(const SKS
             SKSE::GetSerializationInterface()->SetSaveCallback(SaveCallback);
             SKSE::GetSerializationInterface()->SetLoadCallback(LoadCallback);
 
-            InitRaceDisguiseBonus();  // Only on save load (If player changes the race during runtime, it will not be updated)
             spdlog::info("TFS successfully loaded!");
             spdlog::dump_backtrace();
             RE::ConsoleLog::GetSingleton()->Print("TFS successfully loaded!");

@@ -12,6 +12,7 @@
 out
 build
 contrib
+include/nlohmann
 cmake-build*
 *.dll
 *.pdb

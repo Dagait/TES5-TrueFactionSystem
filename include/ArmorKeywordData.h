@@ -1,27 +1,25 @@
 #pragma once
 #include "ArmorSlots.h"
 
-using namespace RE;
 
+namespace NPE {
+    struct ArmorKeywordData {
+        RE::FormID armorID;
+        RE::FormID keywordID;
+    };
 
-struct ArmorKeywordData {
-    RE::FormID armorID;
-    RE::FormID keywordID;
-};
+    /**
+     *
+     */
+    void SaveArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc);
 
-extern std::vector<ArmorKeywordData> savedArmorKeywordAssociations;
+    /**
+     *
+     */
+    void LoadArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc);
 
-/**
-* 
-*/
-void SaveArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc);
-
-/**
- *
- */
-void LoadArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc);
-
-/**
- * For new game?
- */
-void RevertArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc);
+    /**
+     * For new game?
+     */
+    void RevertArmorKeywordDataCallback(SKSE::SerializationInterface* a_intfc);
+}
